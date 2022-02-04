@@ -1,0 +1,300 @@
+import config_binance as cfg
+from binance.client import Client
+from datetime import datetime
+from datetime import timedelta
+from Binance_Exception import BinanceException
+from tqdm import tqdm
+from pandas import DataFrame
+import pandas as pd
+
+
+class BinanceDAO:
+
+    def __init__(self):
+        self.client = Client(api_key=cfg.BINANCE_API_KEY, api_secret=cfg.BINANCE_SECRET_KEY)
+
+    # function of price
+    def get_price_historical_kline(self, symbol: str, interval: str, start_date: datetime = None,
+                                   end_date: datetime = None):
+        if start_date and end_date:
+            start_date = start_date.date()
+            end_date = end_date.date()
+            if end_date - start_date == timedelta(days=1):
+                p_ticker = float(self.client.get_historical_klines(symbol=symbol, interval=interval,
+                                                                   start_str=str(start_date),
+                                                                   end_str=str(end_date))[0][4])
+            else:
+                p_ticker = [float(price[4]) for price in
+                            self.client.get_historical_klines(symbol=symbol, interval=interval,
+                                                              start_str=str(start_date), end_str=str(end_date))]
+
+        elif start_date and not end_date:
+            p_ticker = [float(price[4]) for price in self.client.get_historical_klines(symbol=symbol, interval=interval,
+                                                                                       start_str=str(start_date))]
+        elif not start_date and end_date:
+            raise Exception("You can't just enter the end date")
+        else:
+            p_ticker = float(self.client.get_ticker(symbol=symbol)['lastPrice'])
+
+        return p_ticker
+
+    def get_prev_close_price(self, symbol: str):
+        """
+        Desc: Return Last Price of a given symbol
+        Input:
+            symbol:str
+        Output:
+            ticker.lastPrice
+        """
+        prev_close_price = self.client.get_ticker(symbol=symbol)['prevClosePrice']
+
+        return prev_close_price
+
+    def get_actual_price(self, symbol: str):
+        """
+        Desc: Return Last Price of a given symbol
+        Input:
+            symbol:str
+        Output:
+            ticker.lastPrice
+        """
+        last_price = self.client.get_ticker(symbol=symbol)['lastPrice']
+        return last_price
+
+    def get_symbol_24H(self, symbol: str) -> list:
+        """
+                Desc: Return a list of float type number and str
+                 Input:
+                                       symbol:str
+                  Output:
+                                       list of symbol and the 24 price percentage change
+
+                 """
+        return self.client.get_ticker(symbol=symbol)
+
+    def download_close_p(self, symbol: str, start_d) -> DataFrame:
+        """
+                Desc: Return df 'Data', 'Close P' for a given symbol from a starting date
+                Input:
+                    symbol: str,
+                    start_d: starting date of investment -- self.get_starting_date_of_investment(coin=coin)
+
+                :return  df_price:
+                """
+        # --Download Close Prices
+        end_data = int(datetime.now().timestamp() * 1000)
+        start_data = int(start_d.timestamp() * 1000)
+        prices = self.client.get_historical_klines(start_str=start_data,
+                                                   end_str=end_data,
+                                                   symbol=symbol,
+                                                   interval="1d")
+
+        close_p = [(price[6], price[4]) for price in prices]
+
+        df_price = DataFrame(data=close_p, columns=['Data', 'Close_P'])
+        df_price['Data'] = pd.to_datetime(df_price['Data'], unit="ms")
+        df_price.set_index('Data', inplace=True)
+
+        return df_price
+
+    # amount and coin holding
+    def get_coin_snapshot(self, coin: str) -> float:
+        """
+              Desc: Return Amount detected from in SPOT Account
+              Input:
+                  coin:str
+              Output:
+                  Amount = Amount('free') + Amount('locked')
+
+
+                #-- Amount('locked') are amounts of coin locked in an OPEN TRADE
+              """
+        coin_snapshot = 0
+        account_asset_list = self.client.get_account_snapshot(type="SPOT")['snapshotVos'][0]['data']['balances']
+
+        for asset in account_asset_list:
+            if asset['asset'] == coin:
+                coin_snapshot = float(asset['free']) + float(asset['locked'])
+
+        return coin_snapshot
+
+    def get_holding_asset(self) -> list:
+        """
+        Desc: Return list of Spot Holding Asset
+        :return:
+        """
+        crypto = self.client.get_account_snapshot(type='SPOT')
+
+        asset_tot = []
+        for asset in crypto['snapshotVos'][0]['data']['balances']:
+            if asset['free'] == '0' and asset['locked'] == '0':
+                pass
+            else:
+                asset_tot.append(asset['asset'])
+
+        return asset_tot
+
+    # asset description
+    def get_desc_asset_list(self):
+        """
+                Desc: Return list of Asset Description
+                :return:
+                """
+        des_list = []
+        res = self.client.get_all_coins_info()
+        asset_list = self.get_holding_asset()
+        for rest in res:
+            for crypt in asset_list:
+                if crypt == rest['coin']:
+                    des_list = rest
+        return des_list
+
+    # get data from binance for tables
+    def get_daily_div_history(self, asset=None, limit=None) -> list:
+        """ Desc: Return a list of last LIMIT = limit dividend received of a given asset
+           Input:
+               asset=None : str , limit=None : str
+           Ouput
+               list: dividend
+               """
+        rows = self.client.get_asset_dividend_history(asset=asset, limit=limit)['rows']
+        dividend_list = [stake for stake in rows]
+        return dividend_list
+
+    def get_fiat_deposit_history(self) -> list:
+        """
+                Desc: Return list of Fiat Deposit
+                :return:
+                """
+        try:
+            deposit_list = self.client.get_fiat_deposit_withdraw_history(transactionType=0)['data']
+            deposit_history = [deposit for deposit in deposit_list]
+
+            return deposit_history
+
+        except BinanceException as ex:
+            print('Error:' + str(ex))
+
+    def get_crypto_to_insert(self) -> list:
+        coins = self.client.get_all_coins_info()
+
+        all_coin_info = [(coin['coin'], coin['name'], coin['withdrawAllEnable'], coin['trading'],
+                          coin['networkList'][0]['withdrawEnable']) for coin in tqdm(coins)]
+
+        return all_coin_info
+
+    def get_buy_sell_fiat_to_insert(self, transaction_type: int, start_time: int, end_time: int):
+
+        if transaction_type == 0:
+            tran_type = "B"
+        else:
+            tran_type = "S"
+
+        buy_sell_fiat = self.client.get_fiat_payments_history(transactionType=transaction_type, startTime=start_time,
+                                                                 endTime=end_time)
+
+        if buy_sell_fiat and "data" in buy_sell_fiat:
+            fiats = [(buy_sell['orderNo'], float(buy_sell['sourceAmount']), buy_sell['fiatCurrency'],
+                      float(buy_sell['obtainAmount']), buy_sell['cryptoCurrency'], float(buy_sell['totalFee']),
+                        float(buy_sell['price']), buy_sell['status'],
+                      datetime.fromtimestamp(buy_sell['createTime'] / 1000),
+                        datetime.fromtimestamp(buy_sell['updateTime'] / 1000), tran_type)
+                     for buy_sell in buy_sell_fiat['data']]
+
+            return fiats
+
+    def get_deposit_crypto_to_insert(self, start_time: int, end_time: int) -> list:
+        deposit_crypto = self.client.get_deposit_history(startTime=start_time, endTime=end_time, limit=500)
+        if deposit_crypto:
+            deposit = [(float(dep['amount']), dep['coin'], dep['network'], dep['status'], dep['address'],
+                        dep['addressTag'], dep['txId'], datetime.fromtimestamp(dep['insertTime'] / 1000),
+                        dep['transferType'], dep['confirmTimes'], dep['unlockConfirm'],
+                        dep['walletType']) for dep in deposit_crypto]
+            return deposit
+
+    def get_deposit_withdraw_fiat_to_insert(self, transaction_type: int, start_time: int, end_time: int):
+
+        if transaction_type == 0:
+            tran_type = "D"
+        else:
+            tran_type = "W"
+
+        deposit_fiat = self.client.get_fiat_deposit_withdraw_history(transactionType=transaction_type,
+                                                                     startTime=start_time,
+                                                                     endTime=end_time, rows=500)
+
+        if "data" in deposit_fiat and deposit_fiat['data']:
+            deposits = [(dep['orderNo'], dep['fiatCurrency'],
+                        float(dep['indicatedAmount']), float(dep['amount']), float(dep['totalFee']), dep['method'],
+                        dep['status'], datetime.fromtimestamp(dep['createTime'] / 1000),
+                        datetime.fromtimestamp(dep['updateTime'] / 1000), tran_type)
+                        for dep in deposit_fiat['data']]
+
+            return deposits
+
+    def get_dividends_to_insert(self, asset: str = None, limit: int = None):
+        dividends = self.client.get_asset_dividend_history(asset=asset, limit=limit)['rows']
+        if dividends:
+            all_dividends = [(str(dividend['id']), str(dividend['tranId']), dividend['asset'],
+                              float(dividend['amount']), datetime.fromtimestamp(dividend['divTime'] / 1000),
+                              dividend['enInfo']) for dividend in dividends]
+
+            return all_dividends
+
+    def get_networks_to_insert(self):
+        coins = self.client.get_all_coins_info()
+        list_networks = []
+        for coin in tqdm(coins, desc="Networks's table upsert"):
+            dictionary = coin['networkList']
+            for dic in range(len(dictionary)):
+                for the_key, the_value in dictionary[dic].items():
+                    if type(the_value) == str and the_value == "":
+                        dictionary[dic][the_key] = the_value.replace("", "NULL")
+                ins_net = (dictionary[dic]['network'], dictionary[dic]['coin'],
+                           dictionary[dic]['withdrawIntegerMultiple'], dictionary[dic]['isDefault'],
+                           dictionary[dic]['depositEnable'], dictionary[dic]['withdrawEnable'],
+                           dictionary[dic]['depositDesc'], dictionary[dic]['withdrawDesc'], dictionary[dic]['name'],
+                           dictionary[dic]['resetAddressStatus'], dictionary[dic]['addressRegex'],
+                           dictionary[dic]['memoRegex'], dictionary[dic]['withdrawFee'], dictionary[dic]['withdrawMin'],
+                           dictionary[dic]['withdrawMax'], dictionary[dic]['minConfirm'],
+                           dictionary[dic]['unLockConfirm'], dictionary[dic]['sameAddress'])
+
+                list_networks.append(ins_net)
+        return list_networks
+
+    def get_orders_to_insert(self, symbol: str) -> list:
+        orders = self.client.get_all_orders(symbol=symbol)
+        if orders:
+            order_symbol = [(order['symbol'], order['orderId'], order['clientOrderId'], float(order['price']),
+                             float(order['origQty']), float(order['executedQty']), float(order['cummulativeQuoteQty']),
+                             order['status'], order['timeInForce'], order['type'], order['side'],
+                             float(order['stopPrice']), float(order['icebergQty']),
+                             datetime.fromtimestamp(order['time'] / 1000),
+                             datetime.fromtimestamp(order['updateTime'] / 1000),
+                             order['isWorking'], float(order['origQuoteOrderQty'])) for order in orders]
+            return order_symbol
+
+    def get_symbols_to_insert(self) -> list:
+        symbols = self.client.get_exchange_info()['symbols']
+        symbol_insert = [(symbol['symbol'], symbol['baseAsset'], symbol['quoteAsset']) for symbol in symbols]
+        return symbol_insert
+
+    def get_trades_to_insert(self, symbol: str) -> list:
+        trades = self.client.get_my_trades(symbol=symbol)
+        trade_symbol = [(trade['symbol'], trade['id'], trade['orderId'], float(trade['price']), float(trade['qty']),
+                         float(trade['quoteQty']), float(trade['commission']), trade['commissionAsset'],
+                         datetime.fromtimestamp(trade['time'] / 1000), trade['isBuyer'], trade['isMaker'],
+                         trade['isBestMatch']) for trade in trades]
+        return trade_symbol
+
+    def get_withdraw_crypto(self, start_time: int, end_time: int) -> list:
+        withdraw_crypto = self.client.get_withdraw_history(startTime=start_time, endTime=end_time, limit=500)
+        if withdraw_crypto:
+            withdraws = [(withdraw["id"], float(withdraw["amount"]), withdraw['transactionFee'], withdraw['coin'],
+                          withdraw['status'], withdraw['address'], withdraw['txId'],
+                          datetime.strptime(withdraw["applyTime"], '%Y-%m-%d %H:%M:%S'), withdraw['network'],
+                          withdraw['transferType'], withdraw['info'], withdraw['confirmNo'], withdraw['walletType'])
+                         for withdraw in withdraw_crypto]
+            return withdraws
+
+

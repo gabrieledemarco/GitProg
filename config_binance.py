@@ -1,3 +1,0 @@
-# api key and secret key
-# BINANCE_API_KEY = 'K8q9uWWDN56jm8k7mqKczaon2qwPHeOW2RPnMV7xwQdMHdAW52NaSVwP1VUgI3OB'
-# BINANCE_SECRET_KEY = 'c3sBuTg6FPL6PxETuE4jcrhFhUFL0cNBpVVldrhoQ2HltAuRTpfcfbkvsQhtJJBT'
