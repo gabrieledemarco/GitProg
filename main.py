@@ -29,8 +29,6 @@ spark = (
 sc = spark.sparkContext
 sqlContext = SQLContext(sc)
 
-
-
 """
 df1 = spark.read.format("jdbc").options(driver="org.postgresql.Driver",
                                             url=f"jdbc:postgresql://{settings['host']}:{settings['port']}"
