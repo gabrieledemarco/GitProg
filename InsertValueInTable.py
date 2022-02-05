@@ -77,42 +77,17 @@ class InsertValueInTable:
     def insert_dividends(self):
         asset_tot = self.ser_db.get_all_value_in_column(name_column="coin", name_table="crypto")
 
-        if not self.ser_db.is_not_empty(name_table="dividends"):
-            dividends = self.ser_bin.get_dividends_to_insert(limit=500)
-            if len(dividends) < 500:
-                self.ser_db.insert(name_table="dividends", list_record=dividends)
-            else:
-                all_dividends = []
-                for asset in tqdm(asset_tot):
-                    try:
-                        dividends = self.ser_bin.get_dividends_to_insert(asset=asset, limit=500)
-                        if dividends is not None:
-                            all_dividends.append(dividends)
-                    except Exception as ex:
-                        if str(ex).startswith("APIError(code=-1121)"):
-                            pass
-                        elif str(ex).startswith("APIError(code=-1003)"):
-                            time.sleep(60)
-                            pass
-                        else:
-                            print(ex)
-                            break
-                all_dividends = sum(all_dividends, [])
-                self.ser_db.insert(name_table="dividends", list_record=all_dividends)
-
-    def insert_networks(self):
-        networks = self.ser_bin.get_networks_to_insert()
-        self.ser_db.insert(name_table="networks", list_record=networks)
-
-    def insert_orders(self):
-        symbols = self.ser_db.get_all_value_in_column(name_column="symbol", name_table="symbols")
-        if not self.ser_db.is_not_empty(name_table="orders"):
-            all_order = []
-            for symbol in tqdm(symbols):
+        # if not self.ser_db.is_not_empty(name_table="dividends"):
+        dividends = self.ser_bin.get_dividends_to_insert(limit=500)
+        if len(dividends) < 500:
+            self.ser_db.insert(name_table="dividends", list_record=dividends)
+        else:
+            all_dividends = []
+            for asset in tqdm(asset_tot):
                 try:
-                    orders = self.ser_bin.get_orders_to_insert(symbol=symbol)
-                    if orders is not None:
-                        all_order.append(orders)
+                    dividends = self.ser_bin.get_dividends_to_insert(asset=asset, limit=500)
+                    if dividends is not None:
+                        all_dividends.append(dividends)
                 except Exception as ex:
                     if str(ex).startswith("APIError(code=-1121)"):
                         pass
@@ -122,8 +97,33 @@ class InsertValueInTable:
                     else:
                         print(ex)
                         break
-            all_order = sum(all_order, [])
-            self.ser_db.insert(name_table="orders", list_record=all_order)
+            all_dividends = sum(all_dividends, [])
+            self.ser_db.insert(name_table="dividends", list_record=all_dividends)
+
+    def insert_networks(self):
+        networks = self.ser_bin.get_networks_to_insert()
+        self.ser_db.insert(name_table="networks", list_record=networks)
+
+    def insert_orders(self):
+        symbols = self.ser_db.get_all_value_in_column(name_column="symbol", name_table="symbols")
+        # if not self.ser_db.is_not_empty(name_table="orders"):
+        all_order = []
+        for symbol in tqdm(symbols):
+            try:
+                orders = self.ser_bin.get_orders_to_insert(symbol=symbol)
+                if orders is not None:
+                    all_order.append(orders)
+            except Exception as ex:
+                if str(ex).startswith("APIError(code=-1121)"):
+                    pass
+                elif str(ex).startswith("APIError(code=-1003)"):
+                    time.sleep(60)
+                    pass
+                else:
+                    print(ex)
+                    break
+        all_order = sum(all_order, [])
+        self.ser_db.insert(name_table="orders", list_record=all_order)
 
     def insert_symbols(self):
         if not self.ser_db.is_not_empty(name_table="symbols"):
@@ -133,23 +133,23 @@ class InsertValueInTable:
 
     def insert_trades(self):
         symbols = self.ser_db.get_all_value_in_column(name_column=" distinct symbol", name_table="orders")
-        if not self.ser_db.is_not_empty(name_table="trades"):
-            all_trades = []
-            for symbol in tqdm(symbols):
-                try:
-                    trades = self.ser_bin.get_trades_to_insert(symbol=symbol)
-                    if trades is not None:
-                        all_trades.append(trades)
+        # if not self.ser_db.is_not_empty(name_table="trades"):
+        all_trades = []
+        for symbol in tqdm(symbols):
+            try:
+                trades = self.ser_bin.get_trades_to_insert(symbol=symbol)
+                if trades is not None:
+                    all_trades.append(trades)
 
-                except Exception as ex:
-                    if str(ex).startswith("APIError(code=-1121)"):
-                        pass
-                    elif str(ex).startswith("APIError(code=-1003)"):
-                        time.sleep(60)
-                        pass
-                    else:
-                        print(ex)
-                        break
+            except Exception as ex:
+                if str(ex).startswith("APIError(code=-1121)"):
+                    pass
+                elif str(ex).startswith("APIError(code=-1003)"):
+                    time.sleep(60)
+                    pass
+                else:
+                    print(ex)
+                    break
 
-            all_trades = sum(all_trades, [])
-            self.ser_db.insert(name_table="trades", list_record=all_trades)
+        all_trades = sum(all_trades, [])
+        self.ser_db.insert(name_table="trades", list_record=all_trades)

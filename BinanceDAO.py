@@ -6,12 +6,17 @@ from Binance_Exception import BinanceException
 from tqdm import tqdm
 from pandas import DataFrame
 import pandas as pd
+from DbService import DbService
 
 
 class BinanceDAO:
 
     def __init__(self):
         self.client = Client(api_key=cfg.BINANCE_API_KEY, api_secret=cfg.BINANCE_SECRET_KEY)
+        self.db = DbService()
+        self.id_user = self.db.get_select_with_where(select_columns='id_user', name_table="users",
+                                                     where_columns=['api_key', 'api_secret'],
+                                                     values_column=[cfg.BINANCE_API_KEY, cfg.BINANCE_SECRET_KEY])[0]
 
     # function of price
     def get_price_historical_kline(self, symbol: str, interval: str, start_date: datetime = None,
@@ -194,7 +199,7 @@ class BinanceDAO:
                                                                  endTime=end_time)
 
         if buy_sell_fiat and "data" in buy_sell_fiat:
-            fiats = [(buy_sell['orderNo'], float(buy_sell['sourceAmount']), buy_sell['fiatCurrency'],
+            fiats = [(self.id_user, buy_sell['orderNo'], float(buy_sell['sourceAmount']), buy_sell['fiatCurrency'],
                       float(buy_sell['obtainAmount']), buy_sell['cryptoCurrency'], float(buy_sell['totalFee']),
                         float(buy_sell['price']), buy_sell['status'],
                       datetime.fromtimestamp(buy_sell['createTime'] / 1000),
@@ -206,7 +211,7 @@ class BinanceDAO:
     def get_deposit_crypto_to_insert(self, start_time: int, end_time: int) -> list:
         deposit_crypto = self.client.get_deposit_history(startTime=start_time, endTime=end_time, limit=500)
         if deposit_crypto:
-            deposit = [(float(dep['amount']), dep['coin'], dep['network'], dep['status'], dep['address'],
+            deposit = [(self.id_user, float(dep['amount']), dep['coin'], dep['network'], dep['status'], dep['address'],
                         dep['addressTag'], dep['txId'], datetime.fromtimestamp(dep['insertTime'] / 1000),
                         dep['transferType'], dep['confirmTimes'], dep['unlockConfirm'],
                         dep['walletType']) for dep in deposit_crypto]
@@ -224,7 +229,7 @@ class BinanceDAO:
                                                                      endTime=end_time, rows=500)
 
         if "data" in deposit_fiat and deposit_fiat['data']:
-            deposits = [(dep['orderNo'], dep['fiatCurrency'],
+            deposits = [(self.id_user, dep['orderNo'], dep['fiatCurrency'],
                         float(dep['indicatedAmount']), float(dep['amount']), float(dep['totalFee']), dep['method'],
                         dep['status'], datetime.fromtimestamp(dep['createTime'] / 1000),
                         datetime.fromtimestamp(dep['updateTime'] / 1000), tran_type)
@@ -235,7 +240,7 @@ class BinanceDAO:
     def get_dividends_to_insert(self, asset: str = None, limit: int = None):
         dividends = self.client.get_asset_dividend_history(asset=asset, limit=limit)['rows']
         if dividends:
-            all_dividends = [(str(dividend['id']), str(dividend['tranId']), dividend['asset'],
+            all_dividends = [(self.id_user, str(dividend['id']), str(dividend['tranId']), dividend['asset'],
                               float(dividend['amount']), datetime.fromtimestamp(dividend['divTime'] / 1000),
                               dividend['enInfo']) for dividend in dividends]
 
@@ -265,7 +270,7 @@ class BinanceDAO:
     def get_orders_to_insert(self, symbol: str) -> list:
         orders = self.client.get_all_orders(symbol=symbol)
         if orders:
-            order_symbol = [(order['symbol'], order['orderId'], order['clientOrderId'], float(order['price']),
+            order_symbol = [(self.id_user, order['symbol'], order['orderId'], order['clientOrderId'], float(order['price']),
                              float(order['origQty']), float(order['executedQty']), float(order['cummulativeQuoteQty']),
                              order['status'], order['timeInForce'], order['type'], order['side'],
                              float(order['stopPrice']), float(order['icebergQty']),
@@ -281,7 +286,8 @@ class BinanceDAO:
 
     def get_trades_to_insert(self, symbol: str) -> list:
         trades = self.client.get_my_trades(symbol=symbol)
-        trade_symbol = [(trade['symbol'], trade['id'], trade['orderId'], float(trade['price']), float(trade['qty']),
+        trade_symbol = [(self.id_user, trade['symbol'], trade['id'], trade['orderId'], float(trade['price']),
+                         float(trade['qty']),
                          float(trade['quoteQty']), float(trade['commission']), trade['commissionAsset'],
                          datetime.fromtimestamp(trade['time'] / 1000), trade['isBuyer'], trade['isMaker'],
                          trade['isBestMatch']) for trade in trades]
@@ -290,7 +296,8 @@ class BinanceDAO:
     def get_withdraw_crypto(self, start_time: int, end_time: int) -> list:
         withdraw_crypto = self.client.get_withdraw_history(startTime=start_time, endTime=end_time, limit=500)
         if withdraw_crypto:
-            withdraws = [(withdraw["id"], float(withdraw["amount"]), withdraw['transactionFee'], withdraw['coin'],
+            withdraws = [(self.id_user, withdraw["id"], float(withdraw["amount"]), withdraw['transactionFee'],
+                          withdraw['coin'],
                           withdraw['status'], withdraw['address'], withdraw['txId'],
                           datetime.strptime(withdraw["applyTime"], '%Y-%m-%d %H:%M:%S'), withdraw['network'],
                           withdraw['transferType'], withdraw['info'], withdraw['confirmNo'], withdraw['walletType'])

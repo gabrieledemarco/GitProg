@@ -33,7 +33,10 @@ class DbDao:
         sel = f"select {name_column} from public.{name_table}"
         self.__db.execute(sel)
         rows = self.__db.fetchAll()
-        all_value = [row[0] for row in rows]
+        if name_column == "*":
+            all_value = [row for row in rows]
+        else:
+            all_value = [row[0] for row in rows]
         return all_value
 
     def get_select_with_where(self, select_columns, name_table: str, where_columns, values_column):
