@@ -54,7 +54,3 @@ class UpdateClientTable:
                     for dividend in dividends:
                         all_div.append((dividend['id'], dividend['tranId'], dividend['asset'], dividend['amount'],
                                         dividend['divTime'], dividend['enInfo']))
-
-
-
-
