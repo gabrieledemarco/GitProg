@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 from config_postgres_alchemy import postgres_sql as settings
 
 
-class LoadTable:
+class SparkConnection:
 
     def __init__(self, path, app_name):
         self.settings = settings
@@ -43,8 +43,8 @@ class LoadTable:
 
     def load_table(self, spark, schema, name_table):
         data = spark.read.format("jdbc").options(driver="org.postgresql.Driver",
-                                                 url=f"jdbc:postgresql://{self.settings['host']}:{self.settings['port']}"
-                                                     f"/{self.settings['db']}") \
+                                                 url=f"jdbc:postgresql://{self.settings['host']}:"
+                                                     f"{self.settings['port']}/{self.settings['db']}") \
                                                 .option("user", self.settings['user']) \
                                                 .option("password", self.settings['password']) \
                                                 .options(dbtable=f"{schema}.{name_table}").load()
