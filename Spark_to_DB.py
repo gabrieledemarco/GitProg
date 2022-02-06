@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 from config_postgres_alchemy import postgres_sql as settings
 
 
-class SparkConnection:
+class SparkToDB:
 
     def __init__(self, path, app_name):
         self.settings = settings
@@ -49,6 +49,3 @@ class SparkConnection:
                                                 .option("password", self.settings['password']) \
                                                 .options(dbtable=f"{schema}.{name_table}").load()
         return data
-
-
-# path = ~/Desktop/GitProg/
