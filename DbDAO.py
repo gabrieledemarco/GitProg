@@ -64,3 +64,22 @@ class DbDao:
         else:
             all_value = [row[0] for row in rows]
         return all_value
+
+    def delete_where_condition(self, name_table: str, where_columns, values_column):
+        if type(where_columns) == list:
+            list_val = [[where_columns[i], f"{values_column[i]}"] if type(values_column[i]) == int
+                        else [where_columns[i], f"'{values_column[i]}'"] for i in range(len(values_column))]
+            a = " where " + " and ".join([" = ".join(x) for x in list_val])
+
+        else:
+            if type(values_column) == int or type(values_column) == bool:
+                a = f" where {where_columns} = {values_column}"
+            else:
+                a = f" where {where_columns} = '{values_column}'"
+
+        del_str = f"delete from public.{name_table}" + a
+        self.__db.execute_and_commit(del_str)
+
+    def delete(self, name_table: str):
+        del_str = f"delete from public.{name_table}"
+        self.__db.execute_and_commit(del_str)

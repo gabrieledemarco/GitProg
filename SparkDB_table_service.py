@@ -34,7 +34,3 @@ class SparkToDBService:
     def update_dividends(self):
         users = self.download_users()
         users.select('id_user', 'api_key', 'api_secret')
-
-
-a = SparkToDBService()
-a.download_users().show()

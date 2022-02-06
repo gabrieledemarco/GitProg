@@ -1,16 +1,18 @@
+import time
 from datetime import datetime
 from datetime import timedelta
-from DbService import DbService
-from BinanceService import BinanceService
+
 from tqdm import tqdm
-import time
+
+from BinanceService import BinanceService
+from DbService import DbService
 
 
 class InsertValueInTable:
 
-    def __init__(self):
+    def __init__(self, api_key: str, api_secret: str):
         self.ser_db = DbService()
-        self.ser_bin = BinanceService()
+        self.ser_bin = BinanceService(api_key=api_key, api_secret=api_secret)
 
     def insert_Crypto(self):
         if not self.ser_db.is_not_empty(name_table="crypto"):

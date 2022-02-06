@@ -1,5 +1,6 @@
-from DbDAO import DbDao
 import pandas as pd
+
+from DbDAO import DbDao
 
 
 class DbService:
@@ -32,3 +33,10 @@ class DbService:
                                                   where_columns=where_columns, values_column=values_column)
 
         return pd.DataFrame(data=select, columns=select_columns)
+
+    def delete_where_condition(self, name_table: str, where_columns, values_column):
+        self.__dao.delete_where_condition(name_table=name_table, where_columns=where_columns,
+                                          values_column=values_column)
+
+    def delete(self, name_table: str):
+        self.__dao.delete(name_table=name_table)

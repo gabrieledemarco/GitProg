@@ -6,19 +6,26 @@ from binance.client import Client
 from pandas import DataFrame
 from tqdm import tqdm
 
-import config_binance as cfg
 from Binance_Exception import BinanceException
 from DbService import DbService
 
 
 class BinanceDAO:
 
-    def __init__(self):
-        self.client = Client(api_key=cfg.BINANCE_API_KEY, api_secret=cfg.BINANCE_SECRET_KEY)
+    def __init__(self, api_key: str, api_secret: str):
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.client = Client(api_key=self.api_key, api_secret=self.api_secret)
         self.db = DbService()
         self.id_user = self.db.get_select_with_where(select_columns='id_user', name_table="users",
                                                      where_columns=['api_key', 'api_secret'],
-                                                     values_column=[cfg.BINANCE_API_KEY, cfg.BINANCE_SECRET_KEY])[0]
+                                                     values_column=[api_key, api_secret])[0]
+
+    def get_coins(self):
+        return self.client.get_all_coins_info()
+
+    def get_symbols(self):
+        return self.client.get_exchange_info()['symbols']
 
     # function of price
     def get_price_historical_kline(self, symbol: str, interval: str, start_date: datetime = None,

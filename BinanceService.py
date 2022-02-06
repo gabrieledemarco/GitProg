@@ -1,11 +1,18 @@
-from BinanceDAO import BinanceDAO
 from datetime import datetime
+
+from BinanceDAO import BinanceDAO
 
 
 class BinanceService:
 
-    def __init__(self):
-        self.__dao = BinanceDAO()
+    def __init__(self, api_key: str, api_secret: str):
+        self.__dao = BinanceDAO(api_key=api_key, api_secret=api_secret)
+
+    def get_coins(self):
+        return self.__dao.get_coins()
+
+    def get_symbols(self):
+        return self.__dao.get_symbols()
 
     def get_price_historical_kline(self, symbol: str, interval: str, start_date: datetime = None,
                                    end_date: datetime = None):
