@@ -1,5 +1,5 @@
 import psycopg2 as db
-import config_postgress as cfg
+
 import config_postgres_alchemy as cfa
 
 
@@ -34,7 +34,7 @@ class Database:
     def fetchOne(self):
         return self._curs.fetchone()
 
-    def fetchMany(self, fetch_size=cfg.default_fetc_size):
+    def fetchMany(self, fetch_size=cfa.postgres_sql['default_fetc_size']):
         return self._curs.fetchmany(fetch_size)
 
     def fetchAll(self):

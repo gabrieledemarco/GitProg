@@ -1,11 +1,13 @@
-import config_binance as cfg
-from binance.client import Client
 from datetime import datetime
 from datetime import timedelta
-from Binance_Exception import BinanceException
-from tqdm import tqdm
-from pandas import DataFrame
+
 import pandas as pd
+from binance.client import Client
+from pandas import DataFrame
+from tqdm import tqdm
+
+import config_binance as cfg
+from Binance_Exception import BinanceException
 from DbService import DbService
 
 
