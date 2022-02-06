@@ -10,9 +10,10 @@ from config_postgres_alchemy import postgres_sql as settings
 
 class LoadTable:
 
-    def __init__(self, path):
+    def __init__(self, path, app_name):
         self.settings = settings
         self.path = path
+        self.app_name = app_name
 
     def connection_spark(self):
         conf = SparkConf().setAll(pairs=[("spark.jars", f"{self.path}/postgresql-42.3.2.jar"),
@@ -30,7 +31,7 @@ class LoadTable:
             SparkSession
             .builder
             .master("local[*]")
-            .appName("Project")
+            .appName(self.app_name)
             .config("spark.sql.catalogImplementation", "in-memory")
             .config("spark.sql.warehouse.dir", os.getcwd())
             .config(conf=conf)
