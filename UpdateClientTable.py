@@ -1,3 +1,7 @@
+from datetime import datetime
+
+import pyspark.sql.functions as F
+
 from BinanceService import BinanceService
 from DbService import DbService
 from InsertValueInTable import InsertValueInTable
@@ -16,9 +20,15 @@ class UpdateClientTable:
 
         update_date = self.db.get_select_with_where(select_columns='update_date', name_table='update_table',
                                                     where_columns='name_table', values_column='dividends')
+        new_users = self.users.select("api_key", "api_secret", "registration_date")\
+                        .where(F.col("registration_date") > update_date)
+        old_users = self.users.select("api_key", "api_secret", "registration_date")\
+                        .where(F.col("registration_date") < update_date)
 
-        for client in self.users:
-            ser_bin = BinanceService(api_key=client[1], api_secret=client[2])
-            ins_tab = InsertValueInTable(api_key=client[1], api_secret=client[2])
+        for new_client in new_users.rdd.collect():
+            ser_bin = BinanceService(api_key=new_client[0], api_secret=new_client[1])
+            ins_tab = InsertValueInTable(api_key=new_client[0], api_secret=new_client[1])
+            limit_div = (datetime.now().date() - update_date.date()).days
+
 
 
