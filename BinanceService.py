@@ -14,6 +14,9 @@ class BinanceService:
     def get_symbols(self):
         return self.__dao.get_symbols()
 
+    def get_orders(self, symbol: str, start_time: int = None, end_time: int = None):
+        return self.__dao.get_orders(symbol=symbol, start_time=start_time, end_time=end_time)
+
     def get_price_historical_kline(self, symbol: str, interval: str, start_date: datetime = None,
                                    end_date: datetime = None):
         return self.__dao.get_price_historical_kline(symbol=symbol, interval=interval, start_date=start_date,

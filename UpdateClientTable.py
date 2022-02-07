@@ -35,6 +35,7 @@ class UpdateClientTable:
 
         name_col = self.db.name_columns(name_table="dividends")
         update_date = self.last_update_date(name_table_update="dividends")
+        end_date = datetime.now()
 
         all_div = []
         for user in users.rdd.collect():
@@ -67,11 +68,67 @@ class UpdateClientTable:
                         print(ex)
                         break
 
+            all_div.append(all_div_user)
+
         all_div = sum(all_div, [])
         df_symbols = self.spark_ser.spark.createDataFrame(all_div).toDF(name_col)
         df_symbols.write.insertInto(tableName="public.dividends", overwrite=False)
-        self.db.insert(name_table='update_table', list_record=["dividends", datetime.now()])
+        if self.db.count_records(name_table="update_table") == 3:
+            self.db.insert(name_table='update_table', list_record=["dividends", end_date])
+        else:
+            self.db.delete_where_condition(name_table='update_table', where_columns="name_table",
+                                           values_column="dividends")
+            self.db.insert(name_table='update_table', list_record=["dividends", end_date])
 
     def update_orders(self, users, type_users: str):
+
         name_col = self.db.name_columns(name_table="orders")
+        symbol_tot = self.db.get_all_value_in_column(name_column="symbol", name_table="symbols")
         update_date = self.last_update_date(name_table_update="orders")
+        end_date = datetime.now()
+
+        all_orders = []
+        for user in users.rdd.collect():
+            ser_bin = BinanceService(api_key=user[1], api_secret=user[2])
+            if type_users == "old":
+                start_date = update_date
+            else:
+                start_date = self.db.get_select_with_where(select_columns="registration_date",
+                                                                  name_table="users", where_columns="api_key",
+                                                                  values_column=user[1])
+            start_date = int(start_date.timestamp() * 1000)
+            end_date = int(end_date.timestamp() * 1000)
+            all_ord_user = []
+            for pair in symbol_tot:
+                try:
+                    orders = ser_bin.get_orders(symbol=pair, start_time=start_date, end_time=end_date)
+                    if orders:
+                        for order in orders:
+                            all_ord_user.append((user[0], order['symbol'], order['orderId'], order['clientOrderId'],
+                                                 order['price'], order['origQty'], order['executedQty'],
+                                                 order['cummulativeQuoteQty'], order['status'], order['timeInForce'],
+                                                 order['type'], order['side'], order['stopPrice'], order['icebergQty'],
+                                                 order['time'], order['updateTime'], order['isWorking'],
+                                                 order['origQuoteOrderQty']))
+
+                except Exception as ex:
+                    if str(ex).startswith("APIError(code=-1121)"):
+                        pass
+                    elif str(ex).startswith("APIError(code=-1003)"):
+                        time.sleep(60)
+                        pass
+                    else:
+                        print(ex)
+                        break
+
+            all_orders.append(all_ord_user)
+
+        all_orders = sum(all_orders, [])
+        df_symbols = self.spark_ser.spark.createDataFrame(all_orders).toDF(name_col)
+        df_symbols.write.insertInto(tableName="public.orders", overwrite=False)
+        if self.db.count_records(name_table="update_table") == 4:
+            self.db.insert(name_table='update_table', list_record=["orders", end_date])
+        else:
+            self.db.delete_where_condition(name_table='update_table', where_columns="name_table",
+                                           values_column="orders")
+            self.db.insert(name_table='update_table', list_record=["orders", end_date])

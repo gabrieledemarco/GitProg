@@ -7,7 +7,7 @@ from DbService import DbService
 from InsertValueInTable import InsertValueInTable
 
 
-class CommonTable: #Update_csn (Crypto, Symbols, Networks)
+class CommonTable: # Update_csn (Crypto, Symbols, Networks)
 
     def __init__(self):
         self.db = DbService()
@@ -43,7 +43,8 @@ class CommonTable: #Update_csn (Crypto, Symbols, Networks)
         if self.db.is_not_empty('update_table'):
             self.db.insert(name_table='update_table', list_record=["update_table", datetime.now()])
         else:
-            self.db.delete(name_table='update_table')
+            self.db.delete_where_condition(name_table='update_table', where_columns="name_table",
+                                           values_column="crypto")
             self.db.insert(name_table='update_table', list_record=["crypto", datetime.now()])
 
     def update_symbols(self):
@@ -66,7 +67,12 @@ class CommonTable: #Update_csn (Crypto, Symbols, Networks)
                                         symbol_data[i]['quoteAsset']))
 
         self.db.insert(name_table='symbols', list_record=add_symbols)
-        self.db.insert(name_table='update_table', list_record=["symbols", datetime.now()])
+        if self.db.count_records(name_table="update_table") == 1:
+            self.db.insert(name_table='update_table', list_record=["symbols", datetime.now()])
+        else:
+            self.db.delete_where_condition(name_table='update_table', where_columns="name_table",
+                                           values_column="symbols")
+            self.db.insert(name_table='update_table', list_record=["symbols", datetime.now()])
 
     # def update_networks(self):
     # networks devo pensarci

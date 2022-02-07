@@ -27,6 +27,9 @@ class BinanceDAO:
     def get_symbols(self):
         return self.client.get_exchange_info()['symbols']
 
+    def get_orders(self, symbol: str, start_time: int = None, end_time: int = None):
+        return self.client.get_all_orders(symbol=symbol, startTime=start_time, endTime=end_time)
+
     # function of price
     def get_price_historical_kline(self, symbol: str, interval: str, start_date: datetime = None,
                                    end_date: datetime = None):
