@@ -11,11 +11,15 @@ from config_postgres_alchemy import postgres_sql as settings
 class SparkToDB:
 
     def __init__(self, path, app_name):
-        self.settings = settings
-        self.path = path
-        self.app_name = app_name
+        self.settings = settings    # PostgresSQL on ElephantSQL conncetion settings
+        self.path = path            # Directory path for postgresqk-42.3.2.jar driver
+        self.app_name = app_name    # app name
 
     def connection_spark(self):
+        """
+        Spark Connection to Postgress DB
+        :return:
+        """
         conf = SparkConf().setAll(pairs=[("spark.jars", f"{self.path}/postgresql-42.3.2.jar"),
                                          ("spark.jars.packages", "org.postgresql:postgresql:42.3.2")])
 
@@ -42,6 +46,13 @@ class SparkToDB:
         return spark
 
     def load_table(self, spark, schema, name_table):
+        """
+                Desc: Download Postgress Table into Spark RDD
+        :param spark: Spark Connection
+        :param schema: DB Schema name
+        :param name_table: Table name
+        :return:
+        """
         data = spark.read.format("jdbc").options(driver="org.postgresql.Driver",
                                                  url=f"jdbc:postgresql://{self.settings['host']}:"
                                                      f"{self.settings['port']}/{self.settings['db']}") \
