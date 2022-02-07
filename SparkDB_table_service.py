@@ -37,8 +37,3 @@ class SparkToDBService:
     def download_withdraw_crypto(self):
         return self.conn.load_table(spark=self.spark, schema="public", name_table="withdraw_crypto")
 
-    # Insert values in Tables
-    # --
-    def update_dividends(self):
-        users = self.download_users()
-        users.select('id_user', 'api_key', 'api_secret')
