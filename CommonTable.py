@@ -7,7 +7,7 @@ from DbService import DbService
 from InsertValueInTable import InsertValueInTable
 
 
-class CommonTable:
+class CommonTable: #Update_csn (Crypto, Symbols, Networks)
 
     def __init__(self):
         self.db = DbService()
