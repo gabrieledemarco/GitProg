@@ -2,11 +2,17 @@ from Spark_to_DB import SparkToDB
 
 
 class SparkToDBService:
+    """
+    This class is used as a service of Spark_to_DB class
+    in order to download/insert values from/into ElephantSql PostgreSql DB
+    """
 
     def __init__(self):
         self.conn = SparkToDB(path="~/Desktop/GitProg/", app_name="Project")
         self.spark = self.conn.connection_spark()
 
+    # Download Tables
+    # --
     def download_orders(self):
         return self.conn.load_table(spark=self.spark, schema="public", name_table="orders")
 
@@ -31,6 +37,8 @@ class SparkToDBService:
     def download_withdraw_crypto(self):
         return self.conn.load_table(spark=self.spark, schema="public", name_table="withdraw_crypto")
 
+    # Insert values in Tables
+    # --
     def update_dividends(self):
         users = self.download_users()
         users.select('id_user', 'api_key', 'api_secret')
