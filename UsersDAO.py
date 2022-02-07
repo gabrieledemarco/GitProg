@@ -30,7 +30,8 @@ class UsersService:
 
     def insert_new_user_and_data(self):
         self.user_dao.insert_user()
-        self.insert_value.insert_dividends()
-        self.insert_value.insert_orders()
-        self.insert_value.insert_trades()
-        self.insert_value.insert_deposit_withdraw()
+        #self.insert_value.insert_dividends()
+        #self.insert_value.insert_orders()
+        #self.insert_value.insert_trades()
+        #self.insert_value.insert_deposit_withdraw()
+

@@ -22,6 +22,7 @@ class UpdateClientTable:
         return self.db.get_select_with_where(select_columns='update_date', name_table='update_table',
                                                     where_columns='name_table', values_column=name_table_update)
 
+
     def get_new_users(self, update_date: datetime):
 
         return self.users.select("id_user", "api_key", "api_secret", "registration_date")\
