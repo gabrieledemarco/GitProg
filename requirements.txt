@@ -1,0 +1,6 @@
+psycopg2
+python-binance
+pandas
+pyspark
+streamlit
+streamlit_authenticator
