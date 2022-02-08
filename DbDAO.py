@@ -17,6 +17,12 @@ class DbDao:
         ins = f"insert into public.{name_table} ({n_col}) values {records_list_template}"
         self.__db.execute_and_commit(ins, list_record)
 
+    def insert_one_record(self, name_table: str, name_columns: list, list_record: list):
+        records_list_template = ",".join(["%s"] * len(list_record))
+        n_col = ','.join(name_columns[1:])
+        ins = f"insert into public.{name_table} ({n_col}) values ({records_list_template})"
+        self.__db.execute_and_commit(ins, list_record)
+
     def is_not_empty(self, name_table: str) -> bool:
         sel = f"select count(*) from public.{name_table}"
         self.__db.execute(sel)
