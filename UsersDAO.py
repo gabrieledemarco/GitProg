@@ -14,10 +14,10 @@ class UsersDAO:
         self.pass_word = pass_word
 
     def insert_user(self):
-        return self.db_ser.insert_one_record(name_table='users', list_record=[self.api_key, self.api_secret,
+        return self.db_ser.insert(name_table='users', list_record=[(self.api_key, self.api_secret,
                                                                               self.nick_name,
                                                                               self.pass_word,
-                                                                              datetime.now()])
+                                                                              datetime.now())])
 
 
 class UsersService:
@@ -34,7 +34,3 @@ class UsersService:
         # insert_value.insert_orders()
         # insert_value.insert_trades()
         # insert_value.insert_deposit_withdraw()
-
-
-a = UsersDAO(api_key="aaaa", api_secret="aaas", nick_name="ttttt", pass_word="eeeeee")
-a.insert_user()

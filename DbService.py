@@ -15,10 +15,6 @@ class DbService:
         name_columns = self.__dao.name_columns(name_table=name_table)
         return self.__dao.insert(name_table=name_table, name_columns=name_columns, list_record=list_record)
 
-    def insert_one_record(self, name_table: str, list_record: list):
-        name_columns = self.__dao.name_columns(name_table=name_table)
-        return self.__dao.insert_one_record(name_table=name_table, name_columns=name_columns, list_record=list_record)
-
     def is_not_empty(self, name_table: str) -> bool:
         return self.__dao.is_not_empty(name_table=name_table)
 
