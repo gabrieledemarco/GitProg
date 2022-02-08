@@ -12,7 +12,7 @@ def main():
 
 
 def Sign(Dbs: DbService):
-    side = st.sideba
+    side = st.sidebar
     with side:
         auth = side.container()
         with auth:
