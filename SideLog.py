@@ -16,7 +16,7 @@ def Sign(passwords: list, names: list, usernames: list):
     L = st.sidebar.expander(label="Log In", expanded=False)
     with L:
         st.write("we")
-        #Log_in_form(passwords=passwords, names=names, usernames=usernames)
+        # Log_in_form(passwords=passwords, names=names, usernames=usernames)
     Sign_page_req = st.sidebar.button("Sign Up")
 
     if Sign_page_req:
@@ -47,19 +47,28 @@ def Sign_up_form():
 
         submitted = st.form_submit_button("Submit")
         if submitted:
-            UsersService(api_key=ApiKey, api_secret=ApiSec, nick_name=nick_name, pass_word=password).insert_new_user_and_data()
+            UsersService(api_key=ApiKey, api_secret=ApiSec, nick_name=nick_name,
+                         pass_word=password).insert_new_user_and_data()
     return
 
 
 def Log_in_form(passwords: list, names: list, usernames: list):
-        try:
-            hashed_passwords = stauth.hasher(passwords).generate()
-            authenticator = stauth.authenticate(names, usernames, hashed_passwords,
-                                                'some_cookie_name', 'some_signature_key', cookie_expiry_days=30)
-            name, authentication_status = authenticator.login('Login', 'main')
-        except Exception:
-            print("")
-        return
+    try:
+        hashed_passwords = stauth.hasher(passwords).generate()
+        authenticator = stauth.authenticate(names, usernames, hashed_passwords,
+                                            'some_cookie_name', 'some_signature_key', cookie_expiry_days=30)
+        name, authentication_status = authenticator.login('Login', 'main')
+
+        if authentication_status is False:
+            st.error("Username or Password are incorrect")
+        elif authentication_status is True:
+            st.success(f"User Authorized, welcome dear {name} ")
+        elif authentication_status is None:
+            st.info("Please access to your account with a Username and Password")
+
+    except Exception:
+        print("")
+    return
 
 
 main()
