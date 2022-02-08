@@ -5,6 +5,7 @@ import findspark
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 
+from DbService import DbService
 from config_postgres_alchemy import postgres_sql as settings
 
 
@@ -14,6 +15,7 @@ class SparkToDB:
         self.settings = settings    # PostgresSQL on ElephantSQL conncetion settings
         self.path = path            # Directory path for postgresqk-42.3.2.jar driver
         self.app_name = app_name    # app name
+        self.db = DbService()
 
     def connection_spark(self):
         """
@@ -45,11 +47,10 @@ class SparkToDB:
         spark.sparkContext.setLogLevel("ERROR")
         return spark
 
-    def load_table(self, spark, schema, name_table):
+    def load_table(self, spark, name_table):
         """
                 Desc: Download Postgress Table into Spark RDD
         :param spark: Spark Connection
-        :param schema: DB Schema name
         :param name_table: Table name
         :return:
         """
@@ -58,5 +59,10 @@ class SparkToDB:
                                                      f"{self.settings['port']}/{self.settings['db']}") \
                                                 .option("user", self.settings['user']) \
                                                 .option("password", self.settings['password']) \
-                                                .options(dbtable=f"{schema}.{name_table}").load()
+                                                .options(dbtable=f"public.{name_table}").load()
         return data
+
+    def insert_in_table(self, spark, name_table: str, input_data: list):
+        name_cols = self.db.name_columns(name_table=name_table)
+        df_symbols = spark.createDataFrame(input_data).toDF(name_cols)
+        df_symbols.write.insertInto(tableName=f"public.{name_table}", overwrite=False)

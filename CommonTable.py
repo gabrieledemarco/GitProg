@@ -2,6 +2,7 @@ from datetime import datetime
 
 from tqdm import tqdm
 
+import DateFunction as dT
 from BinanceService import BinanceService
 from DbService import DbService
 from InsertValueInTable import InsertValueInTable
@@ -22,7 +23,16 @@ class CommonTable: # Update_csn (Crypto, Symbols, Networks)
         self.ins_tab.insert_symbols()
         self.ins_tab.insert_networks()
 
+    def update_update_table(self, name_table: str, end_date: datetime):
+        if self.db.count_records(name_table="update_table") != 10:
+            self.db.insert(name_table='update_table', list_record=[name_table, end_date])
+        else:
+            self.db.delete_where_condition(name_table='update_table', where_columns="name_table",
+                                           values_column=name_table)
+            self.db.insert(name_table='update_table', list_record=[name_table, end_date])
+
     def update_crypto(self):
+        end_date = dT.now_date()
         crypto_db = self.db.get_all_value_in_column(name_column='coin', name_table='crypto')
         coins_bin = self.ser_bin.get_coins()
         crypto_to_add = list(set(coins_bin) - set(crypto_db))
@@ -40,14 +50,10 @@ class CommonTable: # Update_csn (Crypto, Symbols, Networks)
                                      coin['networkList'][0]['withdrawEnable']))
 
         self.db.insert(name_table="crypto", list_record=add_list)
-        if self.db.is_not_empty('update_table'):
-            self.db.insert(name_table='update_table', list_record=["update_table", datetime.now()])
-        else:
-            self.db.delete_where_condition(name_table='update_table', where_columns="name_table",
-                                           values_column="crypto")
-            self.db.insert(name_table='update_table', list_record=["crypto", datetime.now()])
+        self.update_update_table(name_table="crypto", end_date=end_date)
 
     def update_symbols(self):
+        end_date = dT.now_date()
         symbols_db = self.db.get_all_value_in_column(name_column='symbol', name_table='symbols')
         symbol_data = self.ser_bin.get_symbols()
         symbols_bin = [symbol['symbol'] for symbol in symbol_data]
@@ -67,28 +73,7 @@ class CommonTable: # Update_csn (Crypto, Symbols, Networks)
                                         symbol_data[i]['quoteAsset']))
 
         self.db.insert(name_table='symbols', list_record=add_symbols)
-        if self.db.count_records(name_table="update_table") == 1:
-            self.db.insert(name_table='update_table', list_record=["symbols", datetime.now()])
-        else:
-            self.db.delete_where_condition(name_table='update_table', where_columns="name_table",
-                                           values_column="symbols")
-            self.db.insert(name_table='update_table', list_record=["symbols", datetime.now()])
+        self.update_update_table(name_table="symbols", end_date=end_date)
 
     # def update_networks(self):
     # networks devo pensarci
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

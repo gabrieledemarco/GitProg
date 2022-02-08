@@ -37,8 +37,8 @@ class InsertValueInTable:
             if deposit_crypto is not None:
                 all_deposit_crypto.append(deposit_crypto)
 
-            withdraw_crypto = self.ser_bin.get_withdraw_crypto(start_time=start_date_ins,
-                                                                       end_time=end_date_ins)
+            withdraw_crypto = self.ser_bin.get_deposit_withdraw_fiat_to_insert(start_time=start_date_ins,
+                                                                               end_time=end_date_ins)
             if withdraw_crypto is not None:
                 all_withdraw_crypto.append(withdraw_crypto)
 
@@ -108,7 +108,7 @@ class InsertValueInTable:
 
     def insert_orders(self):
         symbols = self.ser_db.get_all_value_in_column(name_column="symbol", name_table="symbols")
-        # if not self.ser_db.is_not_empty(name_table="orders"):
+
         all_order = []
         for symbol in tqdm(symbols):
             try:
@@ -124,6 +124,7 @@ class InsertValueInTable:
                 else:
                     print(ex)
                     break
+
         all_order = sum(all_order, [])
         self.ser_db.insert(name_table="orders", list_record=all_order)
 
@@ -135,7 +136,7 @@ class InsertValueInTable:
 
     def insert_trades(self):
         symbols = self.ser_db.get_all_value_in_column(name_column=" distinct symbol", name_table="orders")
-        # if not self.ser_db.is_not_empty(name_table="trades"):
+
         all_trades = []
         for symbol in tqdm(symbols):
             try:

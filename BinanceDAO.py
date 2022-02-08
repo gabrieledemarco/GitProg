@@ -328,7 +328,7 @@ class BinanceDAO:
                          trade['isBestMatch']) for trade in trades]
         return trade_symbol
 
-    def get_withdraw_crypto(self, start_time: int, end_time: int) -> list:
+    def get_withdraw_crypto_to_insert(self, start_time: int, end_time: int) -> list:
         withdraw_crypto = self.client.get_withdraw_history(startTime=start_time, endTime=end_time, limit=500)
         if withdraw_crypto:
             withdraws = [(self.id_user, withdraw["id"], float(withdraw["amount"]), withdraw['transactionFee'],
@@ -338,5 +338,3 @@ class BinanceDAO:
                           withdraw['transferType'], withdraw['info'], withdraw['confirmNo'], withdraw['walletType'])
                          for withdraw in withdraw_crypto]
             return withdraws
-
-

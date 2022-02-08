@@ -96,5 +96,5 @@ class BinanceService:
     def get_trades_to_insert(self, symbol: str) -> list:
         return self.__dao.get_trades_to_insert(symbol=symbol)
 
-    def get_withdraw_crypto(self, start_time: int, end_time: int):
-        return self.__dao.get_withdraw_crypto(start_time=start_time, end_time=end_time)
+    def get_withdraw_crypto_to_insert(self, start_time: int, end_time: int) -> list:
+        return self.__dao.get_withdraw_crypto_to_insert(start_time=start_time, end_time=end_time)
