@@ -30,6 +30,29 @@ class BinanceDAO:
     def get_orders(self, symbol: str, start_time: int = None, end_time: int = None):
         return self.client.get_all_orders(symbol=symbol, startTime=start_time, endTime=end_time)
 
+    def get_trades(self, symbol: str, start_time: int = None, end_time: int = None):
+        return self.client.get_my_trades(symbol=symbol, startTime=start_time, endTime=end_time)
+
+    def get_deposit_crypto(self, start_date: int, end_date: int):
+        return self.client.get_deposit_history(startTime=start_date, endTime=end_date, limit=500)
+
+    def get_withdraw_crypto(self, start_date: int, end_date: int):
+        return self.client.get_withdraw_history(startTime=start_date, endTime=end_date, limit=500)
+
+    def get_deposit_fiat(self, start_date: int, end_date: int):
+        return self.client.get_fiat_deposit_withdraw_history(transactionType=0, startTime=start_date, endTime=end_date,
+                                                             rows=500)
+
+    def get_withdraw_fiat(self, start_date: int, end_date: int):
+        return self.client.get_fiat_deposit_withdraw_history(transactionType=1, startTime=start_date, endTime=end_date,
+                                                             rows=500)
+
+    def get_purchase_cx_fiat(self, start_date: int, end_date: int):
+        return self.client.get_fiat_payments_history(transactionType=0, startTime=start_date, endTime=end_date)
+
+    def get_sell_cx_fiat(self, start_date: int, end_date: int):
+        return self.client.get_fiat_payments_history(transactionType=1, startTime=start_date, endTime=end_date)
+
     # function of price
     def get_price_historical_kline(self, symbol: str, interval: str, start_date: datetime = None,
                                    end_date: datetime = None):

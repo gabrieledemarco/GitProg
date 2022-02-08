@@ -17,6 +17,27 @@ class BinanceService:
     def get_orders(self, symbol: str, start_time: int = None, end_time: int = None):
         return self.__dao.get_orders(symbol=symbol, start_time=start_time, end_time=end_time)
 
+    def get_trades(self, symbol: str, start_time: int = None, end_time: int = None):
+        return self.__dao.get_trades(symbol=symbol, start_time=start_time, end_time=end_time)
+
+    def get_deposit_crypto(self, start_date: int, end_date: int):
+        return self.__dao.get_deposit_crypto(start_date=start_date, end_date=end_date)
+
+    def get_withdraw_crypto(self, start_date: int, end_date: int):
+        return self.__dao.get_withdraw_crypto(start_date=start_date, end_date=end_date)
+
+    def get_deposit_fiat(self, start_date: int, end_date: int):
+        return self.__dao.get_deposit_fiat(start_date=start_date, end_date=end_date)
+
+    def get_withdraw_fiat(self, start_date: int, end_date: int):
+        return self.__dao.get_withdraw_fiat(start_date=start_date, end_date=end_date)
+
+    def get_purchase_cx_fiat(self, start_date: int, end_date: int):
+        return self.__dao.get_purchase_cx_fiat(start_date=start_date, end_date=end_date)
+
+    def get_sell_cx_fiat(self, start_date: int, end_date: int):
+        return self.__dao.get_sell_cx_fiat(start_date=start_date, end_date=end_date)
+
     def get_price_historical_kline(self, symbol: str, interval: str, start_date: datetime = None,
                                    end_date: datetime = None):
         return self.__dao.get_price_historical_kline(symbol=symbol, interval=interval, start_date=start_date,
