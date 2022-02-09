@@ -7,24 +7,28 @@ from UsersDAO import UsersDAO
 
 def main():
     Dbs = DbService()
-    Sign(Dbs)
+    niknames = dbs.get_all_value_in_column(name_column='nickname', name_table='users')
+    Passwords = dbs.get_all_value_in_column(name_column='password', name_table='users')
+
+    Sign(nicknames,Passwords)
 
 
-def Sign(dbs: DbService):
+def Sign(nicknames:list,password:list):
     side = st.sidebar
     with side:
         auth = side.container()
         with auth:
             st.subheader("LogIn/SignUp")
             st.write("Please login in your account \n or register your API and connect to your binance account")
-
+            Log_request = auth.expander(label="Log In", expanded=False)
+            with Log_request:
+                Log_in_form(nicknames,Passwords)
+                
             Sign_request = auth.expander(label="Sign Up", expanded=False)
             with Sign_request:
                 Sign_up()
                 
-            Log_request = auth.expander(label="Log In", expanded=False)
-            with Log_request:
-                Log_in_form(dbs)
+           
 
 
 def Sign_up():
@@ -61,12 +65,9 @@ def Sign_up():
                 st.warning("something goes wrong")
 
 
-def Log_in_form(dbs: DbService):
+def Log_in_form(nicknames:list,password:list):
 
     try:
-        niknames = dbs.get_all_value_in_column(name_column='nickname', name_table='users')
-        Passwords = dbs.get_all_value_in_column(name_column='password', name_table='users')
-
         hashed_passwords = stauth.hasher(Passwords).generate()
         authenticator = stauth.authenticate(niknames, niknames, hashed_passwords,
                                             'some_cookie_name', 'some_signature_key', cookie_expiry_days=30)
