@@ -1,7 +1,5 @@
-import time
 from datetime import datetime
 
-from CommonTable import CommonTable
 from DbService import DbService
 from InsertValueInTable import InsertValueInTable
 
@@ -14,7 +12,6 @@ class UsersDAO:
         self.api_secret = api_secret
         self.nick_name = nick_name
         self.pass_word = pass_word
-        self.comm = CommonTable()
 
     def is_user_registered(self) -> bool:
         user = self.db_ser.get_select_with_where(select_columns='nickname',
@@ -39,9 +36,6 @@ class UsersDAO:
 
     def insert_new_user_and_data(self):
         self.insert_user()
-        time.sleep(10)
-        if not self.db_ser.is_not_empty("crypto"):
-            self.comm.first_insert_common_table()
         insert_value = InsertValueInTable(api_key=self.api_key, api_secret=self.api_secret)
         insert_value.insert_dividends()
         insert_value.insert_orders()
