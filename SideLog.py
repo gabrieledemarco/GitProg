@@ -7,7 +7,7 @@ from UsersDAO import UsersDAO
 
 def main():
     Dbs = DbService()
-    niknames = Dbs.get_all_value_in_column(name_column='nickname', name_table='users')
+    nicknames = Dbs.get_all_value_in_column(name_column='nickname', name_table='users')
     Passwords = Dbs.get_all_value_in_column(name_column='password', name_table='users')
 
     Sign(nicknames,Passwords)
