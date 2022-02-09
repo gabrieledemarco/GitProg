@@ -1,9 +1,11 @@
 from datetime import datetime
 
+import pandas as pd
 from tqdm import tqdm
 
 import DateFunction as dT
 from BinanceService import BinanceService
+from CreateTables import url
 from DbService import DbService
 from InsertValueInTable import InsertValueInTable
 
@@ -12,11 +14,11 @@ class CommonTable: # Update_csn (Crypto, Symbols, Networks)
 
     def __init__(self):
         self.db = DbService()
-        self.api = self.db.get_select_with_where(select_columns=['api_key', 'api_secret'], name_table="users",
-                                                     where_columns='id_user',
-                                                     values_column=1)
-        self.ser_bin = BinanceService(api_key=self.api[0], api_secret=self.api[1])
-        self.ins_tab = InsertValueInTable(api_key=self.api[0], api_secret=self.api[1])
+        self.df = pd.read_sql_table('users', url, index_col='id_user')
+        self.api_key = self.df.loc[self.df['id_user'] == 1, 'api_key'].values[0]
+        self.api_secret = self.df.loc[self.df['id_user'] == 1, 'api_secret'].values[0]
+        self.ser_bin = BinanceService(api_key=self.api_key, api_secret=self.api_secret)
+        self.ins_tab = InsertValueInTable(api_key=self.api_key, api_secret=self.api_secret)
 
     def first_insert_common_table(self):
         self.ins_tab.insert_Crypto()

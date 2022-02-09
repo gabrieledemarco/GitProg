@@ -38,7 +38,7 @@ class InsertValueInTable:
             if deposit_crypto is not None:
                 all_deposit_crypto.append(deposit_crypto)
 
-            withdraw_crypto = self.ser_bin.get_deposit_withdraw_fiat_to_insert(start_time=start_date_ins,
+            withdraw_crypto = self.ser_bin.get_withdraw_crypto_to_insert(start_time=start_date_ins,
                                                                                end_time=end_date_ins)
             if withdraw_crypto is not None:
                 all_withdraw_crypto.append(withdraw_crypto)
@@ -80,7 +80,6 @@ class InsertValueInTable:
     def insert_dividends(self):
         asset_tot = self.ser_db.get_all_value_in_column(name_column="coin", name_table="crypto")
 
-        # if not self.ser_db.is_not_empty(name_table="dividends"):
         dividends = self.ser_bin.get_dividends_to_insert(limit=500)
         if len(dividends) < 500:
             self.ser_db.insert(name_table="dividends", list_record=dividends)

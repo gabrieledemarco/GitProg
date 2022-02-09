@@ -22,14 +22,12 @@ def Sign(nicknames:list,password:list):
             st.write("Please login in your account \n or register your API and connect to your binance account")
             Log_request = auth.expander(label="Log In", expanded=False)
             with Log_request:
-                Log_in_form(nicknames,password)
+                Log_in_form(nicknames, password)
                 
             Sign_request = auth.expander(label="Sign Up", expanded=False)
             with Sign_request:
                 Sign_up()
                 
-           
-
 
 def Sign_up():
     st.title("Welcome dear Binancer")
@@ -66,11 +64,11 @@ def Sign_up():
                 st.warning("something goes wrong")
 
 
-def Log_in_form(nicknames:list,password:list):
+def Log_in_form(nicknames: list, password: list):
 
     try:
         hashed_passwords = stauth.hasher(password).generate()
-        authenticator = stauth.authenticate(niknames, niknames, hashed_passwords,
+        authenticator = stauth.authenticate(nicknames, nicknames, hashed_passwords,
                                             'some_cookie_name', 'some_signature_key', cookie_expiry_days=30)
         name, authentication_status = authenticator.login('Login', 'main')
 

@@ -1,9 +1,10 @@
-from sqlalchemy import create_engine
-from sqlalchemy_utils import database_exists, create_database
-from config_postgres_alchemy import postgres_sql as settings
-from sqlalchemy import Table, Column, Integer, String, Float, TIMESTAMP, MetaData, Boolean, Identity, BigInteger
-from sqlalchemy import PrimaryKeyConstraint
 from datetime import datetime
+
+from sqlalchemy import PrimaryKeyConstraint
+# from sqlalchemy_utils import database_exists, create_database
+# from config_postgres_alchemy import postgres_sql as settings
+from sqlalchemy import Table, Column, Integer, String, Float, TIMESTAMP, MetaData, Boolean, Identity, BigInteger
+from sqlalchemy import create_engine
 
 url = "postgresql://gciexsns:scHZkt9vyw4UT0LaRV-f_7aROAnQ5uGI@tyke.db.elephantsql.com:5432/gciexsns"
 
