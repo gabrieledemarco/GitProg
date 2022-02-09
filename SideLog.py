@@ -17,13 +17,14 @@ def Sign(dbs: DbService):
         with auth:
             st.subheader("LogIn/SignUp")
             st.write("Please login in your account \n or register your API and connect to your binance account")
-            Log_request = auth.expander(label="Log In", expanded=False)
-            with Log_request:
-                Log_in_form(dbs)
 
             Sign_request = auth.expander(label="Sign Up", expanded=False)
             with Sign_request:
                 Sign_up()
+                
+            Log_request = auth.expander(label="Log In", expanded=False)
+            with Log_request:
+                Log_in_form(dbs)
 
 
 def Sign_up():
