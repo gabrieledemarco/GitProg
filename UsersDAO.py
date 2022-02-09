@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from CommonTable import CommonTable
@@ -38,6 +39,7 @@ class UsersDAO:
 
     def insert_new_user_and_data(self):
         self.insert_user()
+        time.sleep(10)
         if not self.db_ser.is_not_empty("crypto"):
             self.comm.first_insert_common_table()
         insert_value = InsertValueInTable(api_key=self.api_key, api_secret=self.api_secret)
