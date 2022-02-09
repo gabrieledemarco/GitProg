@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from tqdm import tqdm
 
+import DateFunction as dT
 from BinanceService import BinanceService
 from DbService import DbService
 
@@ -29,8 +30,8 @@ class InsertValueInTable:
         buy_sell_fiat = []
         while start_date <= end_date:
             end_data = start_date + delta
-            start_date_ins = int(start_date.timestamp() * 1000)
-            end_date_ins = int(end_data.timestamp() * 1000)
+            start_date_ins = dT.datetime_to_milliseconds_int(start_date)
+            end_date_ins = dT.datetime_to_milliseconds_int(end_data)
 
             deposit_crypto = self.ser_bin.get_deposit_crypto_to_insert(start_time=start_date_ins,
                                                                        end_time=end_date_ins)
