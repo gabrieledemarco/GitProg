@@ -8,9 +8,9 @@ from UsersDAO import UsersDAO
 def main():
     Dbs = DbService()
     nicknames = Dbs.get_all_value_in_column(name_column='nickname', name_table='users')
-    Passwords = Dbs.get_all_value_in_column(name_column='password', name_table='users')
+    passwords = Dbs.get_all_value_in_column(name_column='password', name_table='users')
 
-    Sign(nicknames,Passwords)
+    Sign(nicknames,passwords)
 
 
 def Sign(nicknames:list,password:list):
@@ -22,7 +22,7 @@ def Sign(nicknames:list,password:list):
             st.write("Please login in your account \n or register your API and connect to your binance account")
             Log_request = auth.expander(label="Log In", expanded=False)
             with Log_request:
-                Log_in_form(nicknames,Passwords)
+                Log_in_form(nicknames,password)
                 
             Sign_request = auth.expander(label="Sign Up", expanded=False)
             with Sign_request:
@@ -68,7 +68,7 @@ def Sign_up():
 def Log_in_form(nicknames:list,password:list):
 
     try:
-        hashed_passwords = stauth.hasher(Passwords).generate()
+        hashed_passwords = stauth.hasher(password).generate()
         authenticator = stauth.authenticate(niknames, niknames, hashed_passwords,
                                             'some_cookie_name', 'some_signature_key', cookie_expiry_days=30)
         name, authentication_status = authenticator.login('Login', 'main')
