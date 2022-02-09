@@ -74,7 +74,3 @@ class CommonTable: # Update_csn (Crypto, Symbols, Networks)
 
         self.db.insert(name_table='symbols', list_record=add_symbols)
         self.update_update_table(name_table="symbols", end_date=end_date)
-
-
-a = CommonTable()
-a.first_insert_common_table()

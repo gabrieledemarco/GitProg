@@ -41,25 +41,3 @@ class UsersDAO:
         insert_value.insert_orders()
         insert_value.insert_trades()
         insert_value.insert_deposit_withdraw()
-
-
-"""
-class UsersService:
-
-    def __init__(self, api_key: str, api_secret: str, nick_name: str, pass_word: str):
-        self.user_dao = UsersDAO(api_key, api_secret, nick_name, pass_word)
-        # self.insert_value = InsertValueInTable(api_key=api_key, api_secret=api_secret)
-
-    def is_user_registered(self) -> bool:
-        # Return False is user is Not registered
-        return self.is_user_registered()
-
-    def insert_new_user_and_data(self):
-        self.user_dao.insert_user()
-        # insert_value = InsertValueInTable(api_key=self.user_dao.api_key, api_secret=self.user_dao.api_secret)
-        # insert_value.insert_dividends()
-        # insert_value.insert_orders()
-        # insert_value.insert_trades()
-        # insert_value.insert_deposit_withdraw()
-"""
-
