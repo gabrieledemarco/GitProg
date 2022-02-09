@@ -77,3 +77,4 @@ class CommonTable: # Update_csn (Crypto, Symbols, Networks)
 
     # def update_networks(self):
     # networks devo pensarci
+
