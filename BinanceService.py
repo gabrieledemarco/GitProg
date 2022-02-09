@@ -107,3 +107,4 @@ class BinanceService:
 
     def get_withdraw_crypto_to_insert(self, start_time: int, end_time: int) -> list:
         return self.__dao.get_withdraw_crypto_to_insert(start_time=start_time, end_time=end_time)
+#cccc
