@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from pandas import DataFrame
 from BinanceDAO import BinanceDAO
 
 
@@ -7,6 +7,15 @@ class BinanceService:
 
     def __init__(self, api_key: str, api_secret: str):
         self.__dao = BinanceDAO(api_key=api_key, api_secret=api_secret)
+
+    def get_top_10(self, df: DataFrame, limit: int = 10):
+        return self.__dao.get_top_10(Changes=df, limit=limit)
+
+    def get_worst_10(self, df: DataFrame, limit: int = 10):
+        return self.__dao.get_worst_10(Changes=df, limit=limit)
+
+    def get_PriceChange24H(self, quote: str):
+        return self.__dao.get_PriceChange24H(quote=quote)
 
     def get_coins(self):
         return self.__dao.get_coins()
@@ -49,7 +58,7 @@ class BinanceService:
     def get_actual_price(self, symbol: str):
         return self.__dao.get_actual_price(symbol=symbol)
 
-    def get_symbol_24H(self, symbol: str):
+    def get_symbol_24H(self, symbol: str = None):
         return self.__dao.get_symbol_24H(symbol=symbol)
 
     def get_coin_snapshot(self, coin: str):

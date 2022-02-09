@@ -1,19 +1,23 @@
-import streamlit as st
-import streamlit_authenticator as stauth
+import time
 
-from DbService import DbService
+import streamlit as st
 from UsersDAO import UsersDAO
+from DbService import DbService
+import streamlit_authenticator as stauth
+from HomePage import Home_Page
 
 
 def main():
     Dbs = DbService()
-    nicknames = Dbs.get_all_value_in_column(name_column='nickname', name_table='users')
-    passwords = Dbs.get_all_value_in_column(name_column='password', name_table='users')
+    nick = Sign(Dbs)
+    if nick is not None:
+        api = UsersDAO(nick_name=nick).get_Api_of_usr()
+        Home_Page(api_key=api[0][0], api_secret=api[0][1])
+    else:
+        Home_Page()
 
-    Sign(nicknames,passwords)
 
-
-def Sign(nicknames:list,password:list):
+def Sign(Dbs: DbService):
     side = st.sidebar
     with side:
         auth = side.container()
@@ -22,13 +26,12 @@ def Sign(nicknames:list,password:list):
             st.write("Please login in your account \n or register your API and connect to your binance account")
             Log_request = auth.expander(label="Log In", expanded=False)
             with Log_request:
-                Log_in_form(nicknames,password)
-                
+                name = Log_in_form(Dbs)
+
             Sign_request = auth.expander(label="Sign Up", expanded=False)
             with Sign_request:
                 Sign_up()
-                
-           
+    return name
 
 
 def Sign_up():
@@ -56,8 +59,7 @@ def Sign_up():
         if submit_button:
             Usr = UsersDAO(api_key=ApiKey, api_secret=ApiSec, nick_name=nick, pass_word=password)
             if not Usr.is_user_registered():
-                with st.spinner('Wait for it...'):
-                    Usr.insert_new_user_and_data()
+                Usr.insert_user()
                 st.success(f"Hello dear {nick}, you have successufully registered")
 
             elif Usr.is_user_registered():
@@ -66,10 +68,12 @@ def Sign_up():
                 st.warning("something goes wrong")
 
 
-def Log_in_form(nicknames:list,password:list):
-
+def Log_in_form(Dbs: DbService):
     try:
-        hashed_passwords = stauth.hasher(password).generate()
+        niknames = Dbs.get_all_value_in_column(name_column='nickname', name_table='users')
+        Passwords = Dbs.get_all_value_in_column(name_column='password', name_table='users')
+
+        hashed_passwords = stauth.hasher(Passwords).generate()
         authenticator = stauth.authenticate(niknames, niknames, hashed_passwords,
                                             'some_cookie_name', 'some_signature_key', cookie_expiry_days=30)
         name, authentication_status = authenticator.login('Login', 'main')
@@ -80,7 +84,7 @@ def Log_in_form(nicknames:list,password:list):
             st.success(f"User Authorized, welcome dear {name} ")
         elif authentication_status is None:
             st.info("Please access to your account with a Username and Password")
-
+        return name
     except Exception as ex:
         print(ex)
 

@@ -101,7 +101,19 @@ class BinanceDAO:
         last_price = self.client.get_ticker(symbol=symbol)['lastPrice']
         return last_price
 
-    def get_symbol_24H(self, symbol: str) -> list:
+    def get_top_10(self, Changes: DataFrame, limit: int = 10) -> DataFrame:
+        return Changes.sort_values(by='priceChangePercent', ascending=False).head(limit).set_index('Symbol')
+
+    def get_worst_10(self, Changes: DataFrame, limit: int = 10) -> DataFrame:
+        return Changes.sort_values(by='priceChangePercent', ascending=True).head(limit).set_index('Symbol')
+
+    def get_PriceChange24H(self, quote: str) -> DataFrame:
+        Symbol = [(x['symbol'], x['priceChangePercent']  ) for x in self.get_symbol_24H()]
+        df_change = DataFrame(data=Symbol, columns=['Symbol', 'priceChangePercent'])
+        dist_c = df_change.where(df_change['Symbol'].str.endswith(quote.upper()))
+        return dist_c
+
+    def get_symbol_24H(self, symbol: str = None) -> list:
         """
                 Desc: Return a list of float type number and str
                  Input:
@@ -110,7 +122,12 @@ class BinanceDAO:
                                        list of symbol and the 24 price percentage change
 
                  """
-        return self.client.get_ticker(symbol=symbol)
+        if symbol is not None:
+            result = self.client.get_ticker(symbol=symbol)
+        else:
+            result = self.client.get_ticker()
+
+        return result
 
     def download_close_p(self, symbol: str, start_d) -> DataFrame:
         """
@@ -231,14 +248,14 @@ class BinanceDAO:
             tran_type = "S"
 
         buy_sell_fiat = self.client.get_fiat_payments_history(transactionType=transaction_type, startTime=start_time,
-                                                                 endTime=end_time)
+                                                              endTime=end_time)
 
         if buy_sell_fiat and "data" in buy_sell_fiat:
             fiats = [(self.id_user, buy_sell['orderNo'], float(buy_sell['sourceAmount']), buy_sell['fiatCurrency'],
                       float(buy_sell['obtainAmount']), buy_sell['cryptoCurrency'], float(buy_sell['totalFee']),
-                        float(buy_sell['price']), buy_sell['status'],
+                      float(buy_sell['price']), buy_sell['status'],
                       datetime.fromtimestamp(buy_sell['createTime'] / 1000),
-                        datetime.fromtimestamp(buy_sell['updateTime'] / 1000), tran_type)
+                      datetime.fromtimestamp(buy_sell['updateTime'] / 1000), tran_type)
                      for buy_sell in buy_sell_fiat['data']]
 
             return fiats
@@ -265,9 +282,9 @@ class BinanceDAO:
 
         if "data" in deposit_fiat and deposit_fiat['data']:
             deposits = [(self.id_user, dep['orderNo'], dep['fiatCurrency'],
-                        float(dep['indicatedAmount']), float(dep['amount']), float(dep['totalFee']), dep['method'],
-                        dep['status'], datetime.fromtimestamp(dep['createTime'] / 1000),
-                        datetime.fromtimestamp(dep['updateTime'] / 1000), tran_type)
+                         float(dep['indicatedAmount']), float(dep['amount']), float(dep['totalFee']), dep['method'],
+                         dep['status'], datetime.fromtimestamp(dep['createTime'] / 1000),
+                         datetime.fromtimestamp(dep['updateTime'] / 1000), tran_type)
                         for dep in deposit_fiat['data']]
 
             return deposits
@@ -305,13 +322,14 @@ class BinanceDAO:
     def get_orders_to_insert(self, symbol: str) -> list:
         orders = self.client.get_all_orders(symbol=symbol)
         if orders:
-            order_symbol = [(self.id_user, order['symbol'], order['orderId'], order['clientOrderId'], float(order['price']),
-                             float(order['origQty']), float(order['executedQty']), float(order['cummulativeQuoteQty']),
-                             order['status'], order['timeInForce'], order['type'], order['side'],
-                             float(order['stopPrice']), float(order['icebergQty']),
-                             datetime.fromtimestamp(order['time'] / 1000),
-                             datetime.fromtimestamp(order['updateTime'] / 1000),
-                             order['isWorking'], float(order['origQuoteOrderQty'])) for order in orders]
+            order_symbol = [
+                (self.id_user, order['symbol'], order['orderId'], order['clientOrderId'], float(order['price']),
+                 float(order['origQty']), float(order['executedQty']), float(order['cummulativeQuoteQty']),
+                 order['status'], order['timeInForce'], order['type'], order['side'],
+                 float(order['stopPrice']), float(order['icebergQty']),
+                 datetime.fromtimestamp(order['time'] / 1000),
+                 datetime.fromtimestamp(order['updateTime'] / 1000),
+                 order['isWorking'], float(order['origQuoteOrderQty'])) for order in orders]
             return order_symbol
 
     def get_symbols_to_insert(self) -> list:

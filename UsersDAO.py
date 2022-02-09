@@ -1,17 +1,24 @@
 from datetime import datetime
 
 from DbService import DbService
-from InsertValueInTable import InsertValueInTable
+#from InsertValueInTable import InsertValueInTable
 
 
 class UsersDAO:
 
-    def __init__(self, api_key: str, api_secret: str, nick_name: str, pass_word: str):
+    def __init__(self, api_key: str = None, api_secret: str = None, nick_name: str = None, pass_word: str = None):
         self.db_ser = DbService()
         self.api_key = api_key
         self.api_secret = api_secret
         self.nick_name = nick_name
         self.pass_word = pass_word
+
+    def get_Api_of_usr(self):
+        Api = self.db_ser.get_select_with_where(select_columns=['api_key','api_secret'],
+                                                where_columns='nickname',
+                                                values_column=self.nick_name,
+                                                name_table='users')
+        return Api
 
     def is_user_registered(self) -> bool:
         user = self.db_ser.get_select_with_where(select_columns='nickname',
@@ -36,8 +43,31 @@ class UsersDAO:
 
     def insert_new_user_and_data(self):
         self.insert_user()
-        insert_value = InsertValueInTable(api_key=self.api_key, api_secret=self.api_secret)
-        insert_value.insert_dividends()
-        insert_value.insert_orders()
-        insert_value.insert_trades()
-        insert_value.insert_deposit_withdraw()
+        #insert_value = InsertValueInTable(api_key=self.api_key, api_secret=self.api_secret)
+        #insert_value.insert_dividends()
+        #insert_value.insert_orders()
+        #insert_value.insert_trades()
+        #insert_value.insert_deposit_withdraw()
+
+
+
+"""
+class UsersService:
+
+    def __init__(self, api_key: str, api_secret: str, nick_name: str, pass_word: str):
+        self.user_dao = UsersDAO(api_key, api_secret, nick_name, pass_word)
+        # self.insert_value = InsertValueInTable(api_key=api_key, api_secret=api_secret)
+
+    def is_user_registered(self) -> bool:
+        # Return False is user is Not registered
+        return self.is_user_registered()
+
+    def insert_new_user_and_data(self):
+        self.user_dao.insert_user()
+        # insert_value = InsertValueInTable(api_key=self.user_dao.api_key, api_secret=self.user_dao.api_secret)
+        # insert_value.insert_dividends()
+        # insert_value.insert_orders()
+        # insert_value.insert_trades()
+        # insert_value.insert_deposit_withdraw()
+"""
+
