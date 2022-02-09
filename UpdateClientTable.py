@@ -2,7 +2,6 @@ import time
 from datetime import datetime
 
 import pyspark.sql.functions as F
-from tqdm import tqdm
 
 import DateFunction as dT
 import TransfromDataBinance as tdb
@@ -53,7 +52,7 @@ class UpdateClientTable:
                 limit_div = dT.limit(start_date=date_registration, end_date=end_date)
 
             asset_tot = self.db.get_all_value_in_column(name_column="coin", name_table="crypto")
-            for asset in tqdm(asset_tot, desc="Dividends's table upsert"):
+            for asset in asset_tot:
                 try:
                     dividends = ser_bin.get_daily_div_history(asset=asset, limit=limit_div)
                     if dividends:
@@ -90,8 +89,8 @@ class UpdateClientTable:
                                                                   name_table="users", where_columns="api_key",
                                                                   values_column=user[1])
 
-            start_date = dT.datetime_to_milliseconds_int(start_date)
-            end_date = dT.datetime_to_milliseconds_int(end_date)
+            start_date = dT.datetime_to_milliseconds_int(input_data=start_date)
+            end_date = dT.datetime_to_milliseconds_int(input_data=end_date)
 
             for pair in symbol_tot:
                 try:
@@ -130,8 +129,8 @@ class UpdateClientTable:
                 start_date = self.db.get_select_with_where(select_columns="registration_date",
                                                            name_table="users", where_columns="api_key",
                                                            values_column=user[1])
-            start_date = dT.datetime_to_milliseconds_int(start_date)
-            end_date = dT.datetime_to_milliseconds_int(end_date)
+            start_date = dT.datetime_to_milliseconds_int(input_data=start_date)
+            end_date = dT.datetime_to_milliseconds_int(input_data=end_date)
 
             for pair in symbol_orders:
                 try:
@@ -168,8 +167,8 @@ class UpdateClientTable:
                 start_date = self.db.get_select_with_where(select_columns="registration_date",
                                                            name_table="users", where_columns="api_key",
                                                            values_column=user[1])
-            start_date = dT.datetime_to_milliseconds_int(start_date)
-            end_date = dT.datetime_to_milliseconds_int(end_date)
+            start_date = dT.datetime_to_milliseconds_int(input_data=start_date)
+            end_date = dT.datetime_to_milliseconds_int(input_data=end_date)
 
             deposits = ser_bin.get_deposit_crypto(start_date=start_date, end_date=end_date)
             if deposits:
@@ -193,8 +192,8 @@ class UpdateClientTable:
                 start_date = self.db.get_select_with_where(select_columns="registration_date",
                                                            name_table="users", where_columns="api_key",
                                                            values_column=user[1])
-            start_date = dT.datetime_to_milliseconds_int(start_date)
-            end_date = dT.datetime_to_milliseconds_int(end_date)
+            start_date = dT.datetime_to_milliseconds_int(input_data=start_date)
+            end_date = dT.datetime_to_milliseconds_int(input_data=end_date)
 
             withdraw_crypto = ser_bin.get_withdraw_crypto(start_date=start_date, end_date=end_date)
 
@@ -221,8 +220,8 @@ class UpdateClientTable:
                 start_date = self.db.get_select_with_where(select_columns="registration_date",
                                                            name_table="users", where_columns="api_key",
                                                            values_column=user[1])
-            start_date = dT.datetime_to_milliseconds_int(start_date)
-            end_date = dT.datetime_to_milliseconds_int(end_date)
+            start_date = dT.datetime_to_milliseconds_int(input_data=start_date)
+            end_date = dT.datetime_to_milliseconds_int(input_data=end_date)
 
             if withdraws_deposits == "deposit":
                 dep_fiat = ser_bin.get_deposit_fiat(start_date=start_date, end_date=end_date)
@@ -257,8 +256,8 @@ class UpdateClientTable:
                 start_date = self.db.get_select_with_where(select_columns="registration_date",
                                                            name_table="users", where_columns="api_key",
                                                            values_column=user[1])
-            start_date = dT.datetime_to_milliseconds_int(start_date)
-            end_date = dT.datetime_to_milliseconds_int(end_date)
+            start_date = dT.datetime_to_milliseconds_int(input_data=start_date)
+            end_date = dT.datetime_to_milliseconds_int(input_data=end_date)
 
             if buy_sell == "buy":
                 purchase_cx_fiat = ser_bin.get_purchase_cx_fiat(start_date=start_date, end_date=end_date)
@@ -278,8 +277,3 @@ class UpdateClientTable:
 
             self.spark_ser.insert_in_table(name_table="buy_sell_fiat", input_data=all_transaction)
             self.common.update_update_table(name_table="buy_sell_fiat", end_date=end_date)
-
-
-
-
-
