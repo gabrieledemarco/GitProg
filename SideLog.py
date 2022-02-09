@@ -51,7 +51,7 @@ def Sign_up():
         if submit_button:
             Usr = UsersDAO(api_key=ApiKey, api_secret=ApiSec, nick_name=nick, pass_word=password)
             if not Usr.is_user_registered():
-                Usr.insert_user()
+                Usr.insert_new_user_and_data()
                 st.success(f"Hello dear {nick}, you have successufully registered")
 
             elif Usr.is_user_registered():
@@ -83,4 +83,3 @@ def Log_in_form(dbs: DbService):
 
 
 main()
-###
