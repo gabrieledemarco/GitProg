@@ -20,8 +20,8 @@ def min_date(df_list: list):
     return min([min(df.index) for df in df_list if not df.empty])
 
 
-def wags(d, w):
-    return sum(d * w) / sum(w)
+def wags(price, weight):
+    return sum(price * weight) / sum(weight)
 
 
 class StatisticsCoin:
@@ -59,6 +59,7 @@ class StatisticsCoin:
                 Ouput
                     df : ['Dividend']['Trade']['Deposit']['Withdraw']['Sold']['Purchase'][Amount]
                     """
+
         self.df_trade['time'] = pd.to_datetime(self.df_trade['time']).dt.date
         self.df_trade = self.df_trade.loc[self.df_trade['symbol'].str.startswith(coin),
                                           ['time', 'qty']].set_index('time')\
@@ -85,17 +86,21 @@ class StatisticsCoin:
                                                 ['updatetime', 'obtainamount']].set_index('updatetime').sort_index()\
             .rename(index={'updatetime': 'date'})
 
-        mini_date = min_date([self.df_trade, self.df_dep, self.df_with, self.df_div, self.df_buy_sell])
-        df_date = get_df_date(start_date=mini_date)
-        result = df_date.join(self.df_div).join(self.df_trade).join(self.df_dep).join(self.df_with).\
-            join(self.df_buy_sell).fillna(0)
+        if self.df_trade.empty and self.df_dep.empty and self.df_with.empty and self.df_div.empty and \
+                self.df_buy_sell.empty:
+            return print("There are no operations for this coin")
+        else:
+            mini_date = min_date([self.df_trade, self.df_dep, self.df_with, self.df_div, self.df_buy_sell])
+            df_date = get_df_date(start_date=mini_date)
+            result = df_date.join(self.df_div).join(self.df_trade).join(self.df_dep).join(self.df_with).\
+                join(self.df_buy_sell).fillna(0)
 
-        del result['Val']
-        result['Amount'] = (result['amount_div'] + result['qty'] +
-                            result['amount_dep'] + result['amount_with'] +
-                            result['obtainamount']).cumsum()
+            del result['Val']
+            result['Amount'] = (result['amount_div'] + result['qty'] +
+                                result['amount_dep'] + result['amount_with'] +
+                                result['obtainamount']).cumsum()
 
-        return result
+            return result
 
     def get_PL_x_traded_symbols(self, coin: str):
 
@@ -111,28 +116,44 @@ class StatisticsCoin:
             tot['change'] = tot.groupby('symbol')['price'].pct_change().fillna(0)
 
             tot['deposit'] = tot['qty'] * tot['price']
-            tot['sold_dv'] = tot['price'] * (1 + tot['change']) * tot['qty']
+            # tot['sold_dv'] = tot['price'] * (1 + tot['change']) * tot['qty']
             tot['tot_PL'] = tot['change'] * tot['qty'] * tot['price']
             tot['tot_Pl_perc'] = tot['tot_PL'] / tot['deposit']
+            tot['source'] = 'trd'
             tot.set_index('symbol', inplace=True)
 
             return tot
 
     def get_PL_x_trx_symbols(self, coin: str):
         df = self.df_buy_sell.loc[(self.df_buy_sell['cryptocurrency'] == coin) &
-                              (self.df_buy_sell['status'] == 'Completed'), ['fiatcurrency', 'buy_sell', 'sourceamount',
-                                                                            'price']]
+                                  (self.df_buy_sell['status'] == 'Completed'),
+                                  ['fiatcurrency', 'buy_sell', 'obtainamount', 'price']]
 
         if not df.empty:
-            tot = df.groupby(['fiatcurrency', 'buy_sell']).agg({'sourceamount': np.sum, 'price': np.mean}).reset_index()
+            tot = df.groupby(['fiatcurrency', 'buy_sell']).agg({'obtainamount': np.sum, 'price': np.mean}).reset_index()
             tot['change'] = tot.groupby('fiatcurrency')['price'].pct_change().fillna(0)
 
-            tot['deposit'] = tot['sourceamount'] * tot['price']
-            tot['tot_PL'] = tot['change'] * tot['sourceamount'] * tot['price']
+            tot['deposit'] = tot['obtainamount'] * tot['price']
+            tot['tot_PL'] = tot['change'] * tot['obtainamount'] * tot['price']
             tot['tot_Pl_perc'] = tot['tot_PL'] / tot['deposit']
-            tot.set_index('fiatcurrency', inplace=True)
+            tot = tot.rename(columns={"fiatcurrency": "symbol", "buy_sell": "side",
+                                            "obtainamount": "qty"})
+            tot['symbol'] = coin + tot['symbol']
+            tot["side"] = tot["side"].map({"B": "BUY", "S": "SELL"})
+            tot['source'] = 'trx'
+            tot.set_index('symbol', inplace=True)
 
             return tot
+
+    def get_Realized_PL_symbol_grouped(self, coin: str):
+
+        pl_trade = self.get_PL_x_traded_symbols(coin=coin)
+        pl_trx = self.get_PL_x_trx_symbols(coin=coin)
+
+        if pl_trade.empty and pl_trx.empty:
+            return print("There aren't trades and transaction")
+        else:
+            return pd.concat([pl_trade, pl_trx])
 
     def get_df_Weights_from_trade(self, coin: str, quote: str): # rivedere
         df_tot = pd.merge(self.df_trade.loc[self.df_trade['symbol'].str.startswith(coin),
@@ -146,15 +167,10 @@ class StatisticsCoin:
         df_tot['symbol_price'] = np.where((df_tot['quote'] != "USDT") & ((df_tot['symbol'].str.startswith('EUR')) |
                                                                           (df_tot['symbol'].str.startswith('USDT'))),
                                           df_tot['quote'] + df_tot['coin'], df_tot['symbol'])
-        price_tot = []
-        for i in range(len(df_tot)):
-            price_tot.append(self.bin_ser.get_price_historical_kline(symbol=df_tot.loc[i, 'symbol_price'],
-                                                                           interval="1d",
-                                                                           start_date=df_tot.loc[i, 'time']
-                                                                                      - timedelta(days=1),
-                                                                           end_date=df_tot.loc[i, 'time']))
 
-        df_tot['conv_price'] = price_tot
+        df_tot['conv_price'] = df_tot.apply(lambda x: self.bin_ser.get_price_historical_kline(
+            symbol=x['symbol_price'], interval="1d", start_date=x['time'] - timedelta(days=1), end_date=x['time']))
+
         df_tot['new_qty'] = np.where((df_tot['quote'] != "USDT") & ((df_tot['symbol'].str.startswith('EUR')) |
                                                                           (df_tot['symbol'].str.startswith('USDT'))),
                                      df_tot['qty']/df_tot['conv_price'], df_tot['qty']*df_tot['conv_price'])
@@ -195,6 +211,7 @@ class StatisticsCoin:
                                       (self.df_buy_sell['status'] == 'Completed'), ['updatetime', 'fiatcurrency',
                                                                                     'buy_sell', 'obtainamount',
                                                                                     'price']]
+        df_trade_tot['source'] = 'trd'
         df_trade_tot['qty'] = np.where(df_trade_tot['side'] == "BUY", df_trade_tot['qty'], -df_trade_tot['qty'])
         df_trx['obtainamount'] = np.where(df_trx['buy_sell'] == "B", df_trx['obtainamount'], - df_trx['obtainamount'])
 
@@ -202,17 +219,35 @@ class StatisticsCoin:
                                         "obtainamount": "qty"})
         df_trx["side"] = df_trx["side"].map({"B": "BUY", "S": "SELL"})
         df_trx['symbol'] = coin + df_trx['symbol']
-
-        result = pd.concat([df_trx, df_trade_tot[['time', 'symbol', 'side', 'qty', 'price']]]).reset_index().\
+        df_trx['source'] = 'trx'
+        result = pd.concat([df_trx, df_trade_tot[['time', 'symbol', 'side', 'qty', 'price', 'source']]]).reset_index().\
             drop(["index", "side"], axis=1).sort_values('time')
-        result['amount_0T'] = result['qty'].cumsum()
 
-        result['conv_prove'] = np.where(result.symbol.str.replace(coin, "") != quote, result.apply(
+        result['conversion_price'] = np.where(result.symbol.str.replace(coin, "") != quote, result.apply(
             lambda x: self.get_valid_conversion_Price(p_coin_in_quote_0=x['price'],
                                                       quote_0=x['symbol'].replace(coin, ""),
                                                       quote_1=quote, time=x['time']), axis=1), None)
+        result['qty_quote'] = result['conversion_price'] / result['qty']
 
         return result
+
+    def get_1day_EquityV_Change(self, coin: str, quote: str):
+
+        symbol = coin + quote
+        last_two_days = self.get_historical_amount(coin=coin)['Amount'].reset_index().tail(2)
+        last_two_days['price'] = [self.bin_ser.get_prev_close_price(symbol=symbol),
+                                  self.bin_ser.get_actual_price(symbol=symbol)]
+
+        last_two_days['mkt_val'] = last_two_days['Amount'] * last_two_days['price']
+        last_two_days['change'] = last_two_days['mkt_val'].diff()
+        last_two_days['change_p'] = last_two_days['change']/last_two_days['mkt_val'].shift(1) * 100
+
+        return last_two_days[['change', 'change_p']].tail(1).to_dict(orient="records")
+
+
+
+
+"""
 
     def get_df_long_trades_meanPTotAmount_x_coin(self, coin: str):
         symbol_list = self.df_symbol.loc[self.df_symbol['base_asset'] == coin, 'symbol']
@@ -225,20 +260,9 @@ class StatisticsCoin:
 
         df_trade_tot = df_trade_tot[['symbol', 'side', 'qty', 'price']]
         mean_weight = df_trade_tot.groupby('symbol').apply(lambda x: wags(x['price'], x['qty'])).to_frame()#\
-          #  .rename(columns={"0": "mean_price"}, inplace=True)
-        print(mean_weight)
+
         mean_weight['tot_qty'] = df_trade_tot.groupby('symbol')['qty'].sum()
-        print(mean_weight.rename(columns={0: "mean_price"}, inplace=True))
 
+        mean_weight = mean_weight.rename(columns={0: "mean_price"}, inplace=True)
 
-a = StatisticsCoin(id_user=1, api_key="2mYr1HH1a9O3LR3ogAoO9SowRD0DwFX9nLZRUnGifIPmGfmznoVemAqRVc8JKMoC",
-                   api_secret="LvUCcMAe3FecFpY9KVQMOquD8UpYHJfCY1y9EbzMgbSCwhHBmB4CruhsBUzKYsa5")
-a.get_df_long_trades_meanPTotAmount_x_coin("SOL")
-
-
-"""sel = f"select distinct t.symbol, t.price, o.side," \
-              f" t.qty from trades t join " \
-              f" orders o on o.id_order_bin = t.id_order" \
-              f" join symbols s on s.symbol = o.symbol " \
-              f" where s.symbol = '{symbol}' and " \
-              f" o.side = 'BUY' and o.status ='FILLED'"""
+"""

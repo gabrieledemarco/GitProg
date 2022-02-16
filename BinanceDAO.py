@@ -90,7 +90,7 @@ class BinanceDAO:
         """
         prev_close_price = self.client.get_ticker(symbol=symbol)['prevClosePrice']
 
-        return prev_close_price
+        return float(prev_close_price)
 
     def get_actual_price(self, symbol: str) -> float:
         """
@@ -175,6 +175,16 @@ class BinanceDAO:
                 asset_tot.append(asset['asset'])
 
         return asset_tot
+
+    def flexible_position(self, coin):
+        floating_positions = self.client.get_lending_position()
+        list_pos = [(lend['asset'], lend['dailyInterestRate'], lend['totalAmount'], lend['totalInterest'])
+                    for lend in floating_positions]
+        df_flexible_st = DataFrame(data=list_pos, columns=('asset', 'dailyInterestRate', 'totalAmount',
+                                                           'totalInterest'))
+
+        found = df_flexible_st[df_flexible_st['asset'].str.contains(coin)]
+        print(found)
 
     # asset description
     def get_desc_asset_list(self):
@@ -340,3 +350,6 @@ class BinanceDAO:
                           withdraw['transferType'], withdraw['info'], withdraw['confirmNo'], withdraw['walletType'])
                          for withdraw in withdraw_crypto]
             return withdraws
+
+
+
