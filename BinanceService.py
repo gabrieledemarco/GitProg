@@ -8,8 +8,8 @@ class BinanceService:
     def __init__(self, api_key: str, api_secret: str):
         self.__dao = BinanceDAO(api_key=api_key, api_secret=api_secret)
 
-    def flexible_position(self):
-        return
+    def get_flexible_position(self, coin: str):
+        return self.__dao.get_flexible_position(coin=coin)
 
     def get_coins(self):
         return self.__dao.get_coins()

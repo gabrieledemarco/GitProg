@@ -176,15 +176,22 @@ class BinanceDAO:
 
         return asset_tot
 
-    def flexible_position(self, coin):
+    def get_flexible_position(self, coin):
         floating_positions = self.client.get_lending_position()
+
         list_pos = [(lend['asset'], lend['dailyInterestRate'], lend['totalAmount'], lend['totalInterest'])
-                    for lend in floating_positions]
+                    for lend in floating_positions if lend['asset'] == coin]
         df_flexible_st = DataFrame(data=list_pos, columns=('asset', 'dailyInterestRate', 'totalAmount',
                                                            'totalInterest'))
+        if not df_flexible_st.empty:
+            result = df_flexible_st[df_flexible_st['asset'] == coin]['totalAmount'].to_frame().iloc[-1].values
+            tot_interest = df_flexible_st[df_flexible_st['asset'] == coin]['totalInterest'].to_frame().iloc[-1].values
+        else:
+            result = 0
+            tot_interest = 0
 
-        found = df_flexible_st[df_flexible_st['asset'].str.contains(coin)]
-        print(found)
+        flexible = float(result) - float(tot_interest)
+        return flexible
 
     # asset description
     def get_desc_asset_list(self):
@@ -350,6 +357,3 @@ class BinanceDAO:
                           withdraw['transferType'], withdraw['info'], withdraw['confirmNo'], withdraw['walletType'])
                          for withdraw in withdraw_crypto]
             return withdraws
-
-
-

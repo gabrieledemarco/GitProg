@@ -27,7 +27,7 @@ def wags(price, weight):
 class StatisticsCoin:
 
     def __init__(self, id_user: int, api_key: str, api_secret: str):
-        # self.db = DbService()
+
         self.comm = CommonTable()
         self.df_trade = pd.read_sql(sql=f"select * from trades where id_user={id_user}", con=engine_fin)
         engine_fin.dispose()
@@ -244,7 +244,13 @@ class StatisticsCoin:
 
         return last_two_days[['change', 'change_p']].tail(1).to_dict(orient="records")
 
+    def get_FixedStaking_Amount(self, coin: str) -> float:
+        tot_amount = self.get_historical_amount(coin=coin)['amount'].reset_index().tail(1).values
+        print(tot_amount)
+        acc_snap = self.bin_ser.get_coin_snapshot(coin=coin)
+        flex = self.bin_ser.get_flexible_position(coin=coin)
 
+        return float(tot_amount - acc_snap - flex)
 
 
 """
@@ -266,3 +272,5 @@ class StatisticsCoin:
         mean_weight = mean_weight.rename(columns={0: "mean_price"}, inplace=True)
 
 """
+
+
