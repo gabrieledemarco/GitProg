@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 import DateFunction as dT
 from BinanceService import BinanceService
-from CreateTables import url
+from CreateTables import engine_fin
 from DbService import DbService
 from InsertValueInTable import InsertValueInTable
 
@@ -14,7 +14,10 @@ class CommonTable: # Update_csn (Crypto, Symbols, Networks)
 
     def __init__(self):
         self.db = DbService()
-        self.df = pd.read_sql_table('users', url, index_col='id_user')
+        self.df = pd.read_sql_table('users', engine_fin, index_col='id_user').reset_index()
+        engine_fin.dispose()
+        self.df_symbols = pd.read_sql_table(table_name="symbols", con=engine_fin)
+        engine_fin.dispose()
         self.api_key = self.df.loc[self.df['id_user'] == 1, 'api_key'].values[0]
         self.api_secret = self.df.loc[self.df['id_user'] == 1, 'api_secret'].values[0]
         self.ser_bin = BinanceService(api_key=self.api_key, api_secret=self.api_secret)
@@ -76,3 +79,17 @@ class CommonTable: # Update_csn (Crypto, Symbols, Networks)
 
         self.db.insert(name_table='symbols', list_record=add_symbols)
         self.update_update_table(name_table="symbols", end_date=end_date)
+
+    def get_valid_ticker(self, coin: str, quote: str) -> str:
+        ticker = ""
+        try:
+            ticker = self.df_symbols.loc[(self.df_symbols['base_asset'] == coin) &
+                                         (self.df_symbols['quote_asset'] == quote), 'symbol'].values[0]
+        except IndexError as ex:
+            try:
+                ticker = self.df_symbols.loc[(self.df_symbols['base_asset'] == quote) &
+                                             (self.df_symbols['quote_asset'] == coin), 'symbol'].values[0]
+            except IndexError as ex:
+                print(ex)
+        return ticker
+

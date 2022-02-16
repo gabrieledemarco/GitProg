@@ -59,7 +59,9 @@ class BinanceDAO:
         if start_date and end_date:
             start_date = start_date.date()
             end_date = end_date.date()
+
             if end_date - start_date == timedelta(days=1):
+
                 p_ticker = float(self.client.get_historical_klines(symbol=symbol, interval=interval,
                                                                    start_str=str(start_date),
                                                                    end_str=str(end_date))[0][4])
@@ -90,7 +92,7 @@ class BinanceDAO:
 
         return prev_close_price
 
-    def get_actual_price(self, symbol: str):
+    def get_actual_price(self, symbol: str) -> float:
         """
         Desc: Return Last Price of a given symbol
         Input:
@@ -99,7 +101,7 @@ class BinanceDAO:
             ticker.lastPrice
         """
         last_price = self.client.get_ticker(symbol=symbol)['lastPrice']
-        return last_price
+        return float(last_price)
 
     def get_symbol_24H(self, symbol: str) -> list:
         """
